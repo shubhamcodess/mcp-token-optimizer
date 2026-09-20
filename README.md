@@ -132,14 +132,9 @@ mto --version
 
 You can also build the same artifact yourself: `npm pack` in a clone produces `mcp-token-optimizer-<version>.tgz`.
 
-**C. Straight from GitHub** (npm clones and builds it for you)
+> `npm install -g github:shubhamcodess/mcp-token-optimizer` is **not** supported: the package needs a TypeScript build, and npm does not install dev dependencies when building git dependencies. Use A or B. (Publishing to the npm registry is on the roadmap.)
 
-```bash
-npm install -g github:shubhamcodess/mcp-token-optimizer
-mto --version
-```
-
-With **B** and **C** the `mto` command is on your PATH. With **A**, either run `node dist/cli.js …` or link it:
+With **B** the `mto` command is on your PATH. With **A**, either run `node dist/cli.js …` or link it:
 
 ```bash
 npm link                # then: mto --version   (undo with: npm unlink -g mcp-token-optimizer)
