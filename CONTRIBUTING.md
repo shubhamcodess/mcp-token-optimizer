@@ -107,9 +107,22 @@ Add it to the zod schema in `src/config.ts` with a default and a doc comment, wi
 
 Follow [TESTING.md §5](TESTING.md#5-benchmarking-local-llms-on-your-data) and include the table it asks for. One synthetic document isn't proof, so results on more than one dataset are more useful.
 
+## Continuous integration
+
+Every push to `main` and every pull request runs these GitHub Actions:
+
+| Workflow | What it checks |
+|---|---|
+| **CI** (`ci.yml`) | typecheck, unit/integration tests and the end-to-end smoke test on Node 20 and 22 (Ubuntu, macOS); Markdown links and anchors (`npm run docs:check`); that `npm pack` produces an installable package; a final **`CI gate`** job that passes only if all of them passed |
+| **CodeQL** (`codeql.yml`) | static security analysis (also weekly) |
+| **Secret scan** (`secret-scan.yml`) | gitleaks over the full history; synthetic fixtures are allow-listed in `.gitleaks.toml` |
+| **Dependency review** (`dependency-review.yml`) | blocks PRs that add dependencies with known high-severity vulnerabilities |
+
+Dependabot proposes weekly updates for npm packages and Actions. Maintainers: in *Settings → Branches → Branch protection*, require the status check **`CI gate`** (plus **CodeQL** and **Secret scan** if you want them blocking). `Release` publishes a tarball on a `v*` tag; `Publish to npm` is manual-only.
+
 ## Pull request checklist
 
-- [ ] `npm run typecheck`, `npm test` and `npm run smoke` pass locally
+- [ ] `npm run typecheck`, `npm test`, `npm run smoke` and `npm run docs:check` pass locally
 - [ ] Tests added or updated (regression test for bug fixes)
 - [ ] Docs updated (README, `mto.config.example.yaml`, TESTING.md numbers if they changed)
 - [ ] `CHANGELOG.md` updated under *Unreleased*

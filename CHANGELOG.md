@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Added
+- GitHub Actions: docs link check, installable-package check and a single `CI gate` job in CI; CodeQL, gitleaks secret scan, dependency review, stale-issue handling, manual npm publish; Dependabot for npm and Actions.
+
 ## [0.1.0]
 
 First public release.

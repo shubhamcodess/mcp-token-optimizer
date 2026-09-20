@@ -1,0 +1,18 @@
+# gitleaks configuration. Extends the default rules.
+# Test fixtures and docs intentionally contain secret-SHAPED strings (built from fragments at runtime, and the
+# detector regexes themselves). They are synthetic; allow them so real leaks stay visible.
+title = "mcp-token-optimizer gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "synthetic secret-shaped fixtures and detector patterns"
+paths = [
+  '''^tests/''',
+  '''^scripts/make-examples\.mjs$''',
+  '''^scripts/smoke\.mjs$''',
+  '''^src/redact\.ts$''',
+  '''^TESTING\.md$''',
+  '''^README\.md$''',
+]

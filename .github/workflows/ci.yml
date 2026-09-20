@@ -31,3 +31,46 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run smoke
+
+  docs:
+    name: Docs links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Relative links and anchors in the Markdown files resolve
+        run: node scripts/check-links.mjs
+
+  package:
+    name: Installable package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the release tarball (same as the Release workflow)
+        run: npm pack
+      - name: Install the tarball into an empty prefix and run it
+        run: |
+          set -euo pipefail
+          P="$(mktemp -d)"
+          npm install -g --prefix "$P" ./mcp-token-optimizer-*.tgz
+          "$P/bin/mto" --version
+          MTO_HOME="$P/home" "$P/bin/mto" try "$P/lib/node_modules/mcp-token-optimizer/examples/github-issues.json" 2>&1 >/dev/null | tee /dev/stderr | grep -q "saved"
+
+  # Single required status check for branch protection: it passes only if every job above passed.
+  gate:
+    name: CI gate
+    if: always()
+    needs: [test, docs, package]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All required jobs succeeded
+        run: |
+          echo "test=${{ needs.test.result }} docs=${{ needs.docs.result }} package=${{ needs.package.result }}"
+          [ "${{ needs.test.result }}" = "success" ] && [ "${{ needs.docs.result }}" = "success" ] && [ "${{ needs.package.result }}" = "success" ]

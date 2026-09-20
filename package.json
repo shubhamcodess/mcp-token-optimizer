@@ -57,7 +57,8 @@
     "pretest": "node scripts/make-examples.mjs",
     "presmoke": "node scripts/make-examples.mjs",
     "prepare": "npm run build",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "docs:check": "node scripts/check-links.mjs"
   },
   "dependencies": {
     "@toon-format/toon": "^4.1.1",
