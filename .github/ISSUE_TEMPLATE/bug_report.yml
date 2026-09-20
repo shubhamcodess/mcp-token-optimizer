@@ -1,0 +1,59 @@
+name: Bug report
+description: Something is wrong, or the agent lost data or got confused
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! **Never paste real secrets, API keys or captured tool output.** Use synthetic or redacted samples that keep the *shape* of the data.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you see instead? If the agent lost information, say what was missing.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Ideally `node dist/cli.js try <file>` with a synthetic file, or the commands you ran.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "`node dist/cli.js doctor` output"
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: mto version or commit
+      placeholder: "0.1.0 / abc1234"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS and Node version
+      placeholder: "macOS 15 / Node 22.16"
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent and transport
+      placeholder: "VS Code Copilot / stdio wrapper (or HTTP proxy)"
+  - type: input
+    id: settings
+    attributes:
+      label: mode / profile / format (and model, if summarization is involved)
+      placeholder: "active / balanced / auto / qwen3:4b"
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: "`mto stats`, `mto compare` verdicts, `MTO_DEBUG=1` output (with content removed)"

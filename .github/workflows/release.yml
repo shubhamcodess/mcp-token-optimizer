@@ -1,0 +1,33 @@
+name: Release
+
+# Push a tag like v0.2.0 to publish a GitHub release with an installable tarball attached.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tag must match package.json version
+        run: |
+          v="v$(node -p "require('./package.json').version")"
+          if [ "$v" != "$GITHUB_REF_NAME" ]; then echo "tag $GITHUB_REF_NAME != package.json $v"; exit 1; fi
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run smoke
+      - name: Build the installable package
+        run: npm pack
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" ./*.tgz --title "$GITHUB_REF_NAME" --generate-notes
