@@ -1,0 +1,73 @@
+{
+  "name": "mcp-token-optimizer",
+  "version": "0.1.0",
+  "description": "Self-hosted proxy between AI agents and MCP servers that shrinks tool responses (prune, TOON, local-LLM summarization) without hurting agent quality.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "tokens",
+    "context-window",
+    "llm",
+    "ollama",
+    "toon",
+    "proxy",
+    "copilot",
+    "claude-code",
+    "cursor",
+    "ai-agents"
+  ],
+  "homepage": "https://github.com/shubhamcodess/mcp-token-optimizer#readme",
+  "bugs": {
+    "url": "https://github.com/shubhamcodess/mcp-token-optimizer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shubhamcodess/mcp-token-optimizer.git"
+  },
+  "author": "Shubham Prakash",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "mto": "dist/cli.js",
+    "mcp-token-optimizer": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "examples",
+    "scripts",
+    "deploy",
+    "README.md",
+    "TESTING.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "mto.config.example.yaml"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "dev": "tsx src/cli.ts",
+    "examples": "node scripts/make-examples.mjs",
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "demo": "node scripts/mcp-call.mjs --list --tool list_issues -- node dist/cli.js wrap --name demo -- node examples/fake-mcp-server.mjs",
+    "pretest": "node scripts/make-examples.mjs",
+    "presmoke": "node scripts/make-examples.mjs",
+    "prepare": "npm run build",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@toon-format/toon": "^4.1.1",
+    "jsonc-parser": "^3.3.1",
+    "yaml": "^2.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

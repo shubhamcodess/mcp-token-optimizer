@@ -1,0 +1,16 @@
+# Linux systemd USER unit for `mto serve` (untested on this machine; standard unit syntax).
+#   1. Replace __NODE__ (`which node`) and __MTO_DIR__ (absolute repo path).
+#   2. mkdir -p ~/.config/systemd/user && cp deploy/mto-serve.service ~/.config/systemd/user/
+#   3. systemctl --user daemon-reload && systemctl --user enable --now mto-serve
+#   Logs: journalctl --user -u mto-serve -f
+[Unit]
+Description=MCP Token Optimizer (local HTTP proxy)
+After=network.target
+
+[Service]
+ExecStart=__NODE__ __MTO_DIR__/dist/cli.js serve --port 8787
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

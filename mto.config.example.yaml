@@ -1,0 +1,77 @@
+# mcp-token-optimizer: example config. Every key is optional; values shown are the DEFAULTS unless marked (example).
+# Location (first found wins): --config FILE, $MTO_CONFIG, ./mto.config.yaml, ~/.mcp-token-optimizer/config.yaml
+# Full documentation of every key: README.md → "Configuration reference".
+
+mode: active            # active | shadow (measure only, forward originals) | off (transparent pass-through)
+profile: balanced       # conservative | balanced | aggressive   (how much JSON noise is pruned)
+
+llm:                    # local model, used ONLY to summarize long prose
+  provider: ollama
+  baseUrl: http://127.0.0.1:11434
+  model: qwen3:4b       # any model you have pulled: `ollama list`
+  options:              # passed verbatim to Ollama "options"
+    temperature: 0.1
+    top_p: 0.9
+    num_ctx: 8192
+    num_predict: 1024
+  keepAlive: 10m        # how long Ollama keeps the model loaded
+  timeoutMs: 30000      # per-request ceiling
+  think: false          # disable "thinking" for reasoning models
+
+summarize:
+  enabled: true
+  minTokens: 1200       # only text above this is sent to the LLM
+  maxLatencyMs: 20000   # hard wall-clock budget per tool result; unfinished chunks stay verbatim
+  concurrency: 1        # >1 only helps if Ollama runs with OLLAMA_NUM_PARALLEL>1
+  targetRatio: 0.35     # ask for ~35% of the original size
+  minCoverage: 0.97     # share of ids/paths/numbers/urls that must survive, else re-attached/rejected
+  neverTools: ["*read_file*", "*read_text_file*", "*read_multiple_files*", "*get_file_contents*", "*edit*", "*write*", "*diff*", "*patch*"]
+
+format:
+  default: auto         # auto (cheaper of JSON/TOON) | json (minified) | json-pretty | toon
+  jsonTools: []         # globs "server.tool" that must stay (minified) JSON
+  prettyJsonAboveTokens: 0   # >0: results bigger than this become pretty JSON instead of TOON (example: 8000)
+  announceToon: true    # tell the agent (in MCP `instructions`) that TOON/notes may appear
+
+prune:
+  # dropNull: true      # (default true)  remove null values
+  # dropEmpty: true     # (default true)  remove "", [], {}
+  dropKeys: []          # extra key-name globs to drop everywhere, e.g. ["*_etag", "debug_*"]
+  keepKeys: []          # key-name globs that must never be dropped
+  # maxArrayItems: 0    # 0 = unlimited (aggressive profile: 200). Truncation is lossy → adds an expand note
+  # stripBlobsOverBytes: 4096   # replace huge base64 blobs (0 = off; conservative profile: 0)
+  # dedupeAcrossFields: true    # replace repeated line-blocks with a pointer (default: on unless conservative)
+
+toolDefinitions:
+  enabled: false        # also slim tools/list schemas (schemas are contracts, so off by default)
+  stripKeys: ["$schema", "title", "examples", "$comment"]
+
+redaction:
+  mode: detect          # off | detect (audit only) | redact ([REDACTED:type])
+  extraPatterns: []     # e.g. [{ name: internal-token, regex: "itk_[A-Za-z0-9]{24,}" }]
+
+retrieval:
+  enabled: true         # expose the mto_expand tool + notes so the agent can fetch any pruned/condensed original
+  ttlMinutes: 240
+  maxEntries: 500
+
+discovery:              # where `mto init|discover` look for MCP config files, beyond the built-in agents
+  files: []             # e.g. ["~/work/mcp.json", "~/x/settings.json#mcp.servers"]
+  scanDirs: []          # e.g. ["~/Development"]   (finds mcp.json / .mcp.json / *mcp*.json, depth <= 4)
+  builtin: true         # false = ONLY files listed above / passed with --file (same as --no-builtin)
+  skip: []              # built-in agent names to ignore, e.g. ["cursor", "windsurf"]
+
+skipBelowTokens: 40     # smaller results are forwarded untouched
+cache: { enabled: true, maxEntries: 200 }
+audit:
+  enabled: true
+  path: ~/.mcp-token-optimizer/stats.jsonl   # default; absolute path
+  pricePerMTokUsd: 3    # used by `mto stats` for the $ estimate
+
+# Per-tool overrides on "server.tool" globs (server = the --name given to `mto wrap` / the route name). First match wins.
+# Keys allowed: mode, format, summarize, dropKeys, keepKeys, maxArrayItems
+tools: {}
+#  "github.list_*":       { maxArrayItems: 100 }
+#  "postgres.query":      { format: json, summarize: false }
+#  "filesystem.*":        { mode: off }
+#  "k8s.kube_get_*": { format: json-pretty }
