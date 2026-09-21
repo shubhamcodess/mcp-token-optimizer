@@ -20,7 +20,7 @@
 ---
 
 ```
-                       ┌────────────────────── mcp-token-optimizer ──────────────────────┐
+                       ┌────────────────────── mcp-token-optimizer ───────────────────────┐
  AI agent  ──request──►│  pass-through                                                    │──► real MCP server
  (Copilot,             │                                                                  │    (stdio process
   Claude Code, …)  ◄───│  prune → JSON/TOON → normalize → summarize (local Ollama)        │◄──  or remote HTTP)
