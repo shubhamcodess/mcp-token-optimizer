@@ -4,7 +4,7 @@
 
 ### Stop paying for tool-response noise.
 
-**A self-hosted proxy between your AI agent and its MCP servers that shrinks every tool response — pruning, [TOON](https://github.com/toon-format/toon) encoding and local-LLM summarization — without changing what the agent can do.**
+**A self-hosted proxy between your AI agent and its MCP servers that shrinks every tool response: pruning, [TOON](https://github.com/toon-format/toon) encoding and local-LLM summarization, without changing what the agent can do.**
 
 [![CI](https://github.com/shubhamcodess/mcp-token-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/shubhamcodess/mcp-token-optimizer/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
@@ -19,15 +19,9 @@
 
 ---
 
-```
-                       ┌────────────────────── mcp-token-optimizer ───────────────────────┐
- AI agent  ──request──►│  pass-through                                                    │──► real MCP server
- (Copilot,             │                                                                  │    (stdio process
-  Claude Code, …)  ◄───│  prune → JSON/TOON → normalize → summarize (local Ollama)        │◄──  or remote HTTP)
-                       │        guardrails · audit log · mto_expand (get the original)    │
-                       └──────────────────────────────────────────────────────────────────┘
-                                        everything runs on YOUR machine
-```
+<p align="center">
+  <img src="docs/architecture.png" alt="The AI agent talks to mcp-token-optimizer, which prunes, TOON-encodes, summarizes and guards each MCP tool result before returning a compact result; everything runs on your machine." width="900">
+</p>
 
 ## Why
 
