@@ -60,5 +60,5 @@
     <text x="950" y="136" fill="#64748b">full result</text>
   </g>
 
-  <text x="600" y="198" text-anchor="middle" font-size="10" letter-spacing="1" fill="#64748b">runs on your machine  ·  37,355 → 13,244 tok  <tspan fill="#22d3ee" font-weight="700">−64.5%</tspan></text>
+  <text x="600" y="198" text-anchor="middle" font-size="10" letter-spacing="1" fill="#64748b">runs on your machine</text>
 </svg>
