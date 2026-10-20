@@ -8,20 +8,20 @@
     </marker>
   </defs>
 
-  <rect x="0.5" y="0.5" width="1199" height="214" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="0.5" y="0.5" width="1199" height="214" fill="#eef1f5" stroke="#d0d7de"/>
 
   <!-- agent -->
-  <rect x="40.5" y="78.5" width="130" height="54" fill="#f6f8fa" stroke="#8c959f"/>
+  <rect x="40.5" y="78.5" width="130" height="54" fill="#fbfcfd" stroke="#8c959f"/>
   <text x="105" y="110" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="2" fill="#1f2328">AGENT</text>
   <text x="105" y="152" text-anchor="middle" font-size="10" fill="#57606a">Copilot · Claude · Cursor</text>
 
   <!-- mcp server -->
-  <rect x="1030.5" y="78.5" width="130" height="54" fill="#f6f8fa" stroke="#8c959f"/>
+  <rect x="1030.5" y="78.5" width="130" height="54" fill="#fbfcfd" stroke="#8c959f"/>
   <text x="1095" y="110" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="2" fill="#1f2328">MCP SERVER</text>
   <text x="1095" y="152" text-anchor="middle" font-size="10" fill="#57606a">stdio · http</text>
 
   <!-- optimizer -->
-  <rect x="330.5" y="40.5" width="540" height="130" fill="#ffffff" stroke="#0e7490" stroke-opacity="0.7"/>
+  <rect x="330.5" y="40.5" width="540" height="130" fill="#f6f8fa" stroke="#0e7490" stroke-opacity="0.7"/>
   <!-- header: logo + name, one small line -->
   <path d="M523 51 l-8 12 h6 l-3 10 l10 -13 h-6 z" fill="#0e7490"/>
   <text x="537" y="68" font-size="13" font-weight="700" letter-spacing="1" fill="#1f2328">mcp-token-optimizer</text>
@@ -29,19 +29,19 @@
 
   <!-- stages -->
   <g>
-    <rect x="350.5" y="98.5" width="110" height="46" fill="#f6f8fa" stroke="#8c959f"/><rect x="350" y="98" width="2" height="47" fill="#0e7490"/>
+    <rect x="350.5" y="98.5" width="110" height="46" fill="#fbfcfd" stroke="#8c959f"/><rect x="350" y="98" width="2" height="47" fill="#0e7490"/>
     <text x="408" y="117" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1.5" fill="#1f2328">PRUNE</text>
     <text x="408" y="133" text-anchor="middle" font-size="9" fill="#57606a">drop noise</text>
 
-    <rect x="480.5" y="98.5" width="110" height="46" fill="#f6f8fa" stroke="#8c959f"/><rect x="480" y="98" width="2" height="47" fill="#0e7490"/>
+    <rect x="480.5" y="98.5" width="110" height="46" fill="#fbfcfd" stroke="#8c959f"/><rect x="480" y="98" width="2" height="47" fill="#0e7490"/>
     <text x="538" y="117" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1.5" fill="#1f2328">TOON</text>
     <text x="538" y="133" text-anchor="middle" font-size="9" fill="#57606a">compact encode</text>
 
-    <rect x="610.5" y="98.5" width="110" height="46" fill="#f6f8fa" stroke="#8c959f"/><rect x="610" y="98" width="2" height="47" fill="#0e7490"/>
+    <rect x="610.5" y="98.5" width="110" height="46" fill="#fbfcfd" stroke="#8c959f"/><rect x="610" y="98" width="2" height="47" fill="#0e7490"/>
     <text x="668" y="117" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1.5" fill="#1f2328">SUMMARIZE</text>
     <text x="668" y="133" text-anchor="middle" font-size="9" fill="#57606a">local ollama</text>
 
-    <rect x="740.5" y="98.5" width="110" height="46" fill="#f6f8fa" stroke="#8c959f"/><rect x="740" y="98" width="2" height="47" fill="#0e7490"/>
+    <rect x="740.5" y="98.5" width="110" height="46" fill="#fbfcfd" stroke="#8c959f"/><rect x="740" y="98" width="2" height="47" fill="#0e7490"/>
     <text x="798" y="117" text-anchor="middle" font-size="11" font-weight="700" letter-spacing="1.5" fill="#1f2328">GUARD</text>
     <text x="798" y="133" text-anchor="middle" font-size="9" fill="#57606a">never bigger</text>
   </g>

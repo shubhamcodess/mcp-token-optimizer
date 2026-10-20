@@ -20,7 +20,10 @@
 ---
 
 <p align="center">
-  <img src="docs/architecture.png" alt="The AI agent talks to mcp-token-optimizer, which prunes, TOON-encodes, summarizes and guards each MCP tool result before returning a compact result; everything runs on your machine." width="900">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+    <img src="docs/architecture-light.png" alt="The AI agent talks to mcp-token-optimizer, which prunes, TOON-encodes, summarizes and guards each MCP tool result before returning a compact result; the MCP server sits on the other side." width="900">
+  </picture>
 </p>
 
 ## Why
