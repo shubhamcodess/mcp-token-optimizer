@@ -1,0 +1,16 @@
+name: Feedback or suggestion
+description: A comment, question or suggestion that isn't a bug or a feature request
+title: "Feedback: "
+body:
+  - type: textarea
+    id: message
+    attributes:
+      label: What's on your mind?
+      description: A comment on the tool or the website, something that confused you, something you'd change.
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent you use it with (optional)
+      placeholder: VS Code Copilot, Claude Code, Cursor, ...
