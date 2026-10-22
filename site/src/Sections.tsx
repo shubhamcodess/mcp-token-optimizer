@@ -631,8 +631,8 @@ export function Maker() {
             <img
               src={`${BASE}maker.jpg`}
               alt={AUTHOR}
-              width="64"
-              height="64"
+              width="104"
+              height="130"
               loading="lazy"
             />
             <div>

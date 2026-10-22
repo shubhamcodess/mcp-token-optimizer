@@ -2017,13 +2017,14 @@ h1 .cut::after {
 }
 .dev__id {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-end;
+  gap: 20px;
 }
 .dev__id img {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 104px;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 14px;
   box-shadow: 0 0 0 1px var(--line-2);
   background: var(--raise);
 }
