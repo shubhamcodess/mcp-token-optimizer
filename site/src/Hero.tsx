@@ -12,7 +12,7 @@ export function Hero() {
 
   function onKey(e: KeyboardEvent<HTMLDivElement>) {
     const i = TABS.indexOf(tab)
-    let n = i
+    let n: number
     if (e.key === 'ArrowRight') n = (i + 1) % TABS.length
     else if (e.key === 'ArrowLeft') n = (i - 1 + TABS.length) % TABS.length
     else return

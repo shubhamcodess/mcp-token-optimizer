@@ -70,7 +70,7 @@ export function Term({ tabs, title = 'zsh' }: { tabs: TermTab[]; title?: string 
   }, [active, visible, reduced, tab.lines])
 
   function onKey(e: KeyboardEvent<HTMLDivElement>) {
-    let n = active
+    let n: number
     if (e.key === 'ArrowRight') n = (active + 1) % tabs.length
     else if (e.key === 'ArrowLeft') n = (active - 1 + tabs.length) % tabs.length
     else return

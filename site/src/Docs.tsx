@@ -28,11 +28,10 @@ const SOURCES: Record<string, string[]> = {
   '18': ['CONTRIBUTING.md'],
 }
 
-/** GitHub's heading anchor algorithm, so the README's own cross-links keep working. */
+/** GitHub's heading anchor algorithm on plain text, so the README's own cross-links keep working. */
 function slug(text: string) {
   return text
     .toLowerCase()
-    .replace(/<[^>]+>/g, '')
     .replace(/[^\p{L}\p{N}\s_-]/gu, '')
     .replace(/\s/g, '-')
 }
@@ -68,7 +67,6 @@ interface Section {
   title: string
   id: string
   html: string
-  subs: { id: string; title: string }[]
 }
 
 function buildSections(): Section[] {
@@ -80,16 +78,14 @@ function buildSections(): Section[] {
     const num = (first.match(/^(\d+)\./) ?? [])[1] ?? ''
     const id = slug(first)
     const body = p.split('\n').slice(1).join('\n').replace(/\n---\s*$/m, '')
-    const subs: { id: string; title: string }[] = []
     const renderer = new marked.Renderer()
-    renderer.heading = ({ tokens, depth }) => {
-      const text = marked.Parser.parseInline(tokens)
-      const hid = slug(text)
-      if (depth === 3) subs.push({ id: hid, title: text.replace(/<[^>]+>/g, '') })
-      return `<h${depth} id="${hid}">${text}</h${depth}>`
+    renderer.heading = ({ tokens, depth, text: raw }) => {
+      // anchor from the heading's plain text (markdown source minus formatting), never from rendered HTML
+      const hid = slug(raw)
+      return `<h${depth} id="${hid}">${marked.Parser.parseInline(tokens)}</h${depth}>`
     }
     const html = highlight(marked.parse(body, { renderer, async: false }) as string)
-    return { num, title: first, id, html, subs }
+    return { num, title: first, id, html }
   })
 }
 
