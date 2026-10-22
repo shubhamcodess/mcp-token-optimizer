@@ -12,6 +12,7 @@
 [![Local LLM](https://img.shields.io/badge/local%20LLM-Ollama-000000.svg)](https://ollama.com)
 [![Protocol](https://img.shields.io/badge/protocol-MCP-6f42c1.svg)](https://modelcontextprotocol.io)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Unique visitors](https://visitor-badge.laobi.icu/badge?page_id=shubhamcodess.mcp-token-optimizer&left_text=unique%20visitors)](https://github.com/shubhamcodess/mcp-token-optimizer)
 
 [**Quick start**](#quick-start) &nbsp;·&nbsp; [**How it works**](#3-how-it-works) &nbsp;·&nbsp; [**Documentation**](#documentation) &nbsp;·&nbsp; [**Testing**](TESTING.md) &nbsp;·&nbsp; [**Contributing**](CONTRIBUTING.md)
 
