@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T14:14:49.036808+00:00",
+  "title": "Design System: mcp-token-optimizer",
+  "extensions": {
+    "colorMeta": {
+      "ink-dark": {
+        "role": "neutral",
+        "displayName": "Bone Ink",
+        "tonalRamp": [
+          "#2b2a2a",
+          "#5a5a58",
+          "#8e8e8b",
+          "#c2c2be",
+          "#f1f0ed",
+          "#f5f5f2",
+          "#faf9f8",
+          "#fdfdfc"
+        ]
+      },
+      "ground-dark": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "tonalRamp": [
+          "#020202",
+          "#050504",
+          "#070707",
+          "#0a0a09",
+          "#3d3d3c",
+          "#797979",
+          "#b6b6b6",
+          "#e2e2e2"
+        ]
+      },
+      "cut-dark": {
+        "role": "primary",
+        "displayName": "Cut Orange",
+        "tonalRamp": [
+          "#2c140b",
+          "#5e2b18",
+          "#944326",
+          "#cb5c34",
+          "#f98d65",
+          "#fbb095",
+          "#fdd4c5",
+          "#feeee8"
+        ]
+      },
+      "ok-dark": {
+        "role": "secondary",
+        "displayName": "Pass Green",
+        "tonalRamp": [
+          "#17261d",
+          "#30513d",
+          "#4c7f60",
+          "#68ae83",
+          "#99ddb3",
+          "#b9e7cb",
+          "#d9f2e2",
+          "#f0faf4"
+        ]
+      },
+      "key-dark": {
+        "role": "tertiary",
+        "displayName": "Key Sand",
+        "tonalRamp": [
+          "#27241e",
+          "#524c3f",
+          "#817964",
+          "#b0a589",
+          "#dfd4b9",
+          "#e9e1cf",
+          "#f3efe5",
+          "#faf9f4"
+        ]
+      },
+      "ground-light": {
+        "role": "neutral",
+        "displayName": "Paper Ground",
+        "tonalRamp": [
+          "#2d2d2d",
+          "#5f5f5e",
+          "#969695",
+          "#cdcdcb",
+          "#fbfbf9",
+          "#fcfcfb",
+          "#fefefd",
+          "#fefefe"
+        ]
+      },
+      "ink-light": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "tonalRamp": [
+          "#020202",
+          "#050504",
+          "#070707",
+          "#0a0a09",
+          "#3d3d3c",
+          "#797979",
+          "#b6b6b6",
+          "#e2e2e2"
+        ]
+      },
+      "cut-light": {
+        "role": "primary",
+        "displayName": "Cut Orange (light)",
+        "tonalRamp": [
+          "#230c02",
+          "#4a1905",
+          "#742707",
+          "#9f350a",
+          "#ce673d",
+          "#dd9679",
+          "#edc6b6",
+          "#f8e8e2"
+        ]
+      },
+      "ok-light": {
+        "role": "secondary",
+        "displayName": "Pass Green (light)",
+        "tonalRamp": [
+          "#04170b",
+          "#083117",
+          "#0d4d25",
+          "#116932",
+          "#449964",
+          "#7eb994",
+          "#b9d9c5",
+          "#e3f0e8"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headline only; max 17ch."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, tile and step titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Subtitles and short supporting copy, max ~54ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Captions, tabs, pills, file names (JetBrains Mono)."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Terminals, agent window, docs code blocks."
+      }
+    },
+    "shadows": [
+      {
+        "name": "window-dark",
+        "value": "0 40px 100px -30px rgba(0,0,0,0.8), 0 0 0 1px rgba(237,236,232,0.06)",
+        "purpose": "Floating screens (agent app, terminals) in the dark theme."
+      },
+      {
+        "name": "window-light",
+        "value": "0 40px 90px -36px rgba(12,12,11,0.45), 0 0 0 1px rgba(12,12,11,0.08)",
+        "purpose": "Floating screens in the light theme."
+      },
+      {
+        "name": "card-lift",
+        "value": "0 30px 60px -30px color-mix(in srgb, var(--text) 30%, transparent)",
+        "purpose": "Maker card on hover, with the pointer tilt."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every arrival: reveals, bar shrink, tab and state changes."
+      },
+      {
+        "name": "reveal",
+        "value": "opacity + 18px rise + 6px blur, 900ms, 90ms stagger",
+        "purpose": "Section blocks the first time they scroll into view."
+      },
+      {
+        "name": "replay-cycle",
+        "value": "15.5s",
+        "purpose": "Agent replay loop; pauses off-screen."
+      },
+      {
+        "name": "bar-shrink",
+        "value": "1600ms, 120ms stagger",
+        "purpose": "Benchmark bars shrinking to the share that reaches the model."
+      },
+      {
+        "name": "tilt",
+        "value": "lerp 0.12 per frame, max 7deg X / 9deg Y, perspective 900px",
+        "purpose": "Maker card follows the pointer."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone",
+        "value": "390px"
+      },
+      {
+        "name": "stack",
+        "value": "760px"
+      },
+      {
+        "name": "nav",
+        "value": "880px"
+      },
+      {
+        "name": "bento",
+        "value": "900px"
+      },
+      {
+        "name": "split",
+        "value": "960px"
+      },
+      {
+        "name": "wide",
+        "value": "1000px"
+      },
+      {
+        "name": "app-sidebar",
+        "value": "1080px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one solid action per area: Download latest, the maker's GitHub.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Download latest</a>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:10px;background:var(--btn-bg,#edece8);color:var(--btn-fg,#0c0c0b);font:500 15px/1 'Geist Variable',system-ui,sans-serif;text-decoration:none;transition:background 150ms cubic-bezier(.16,1,.3,1),transform 150ms}.ds-btn-primary:hover{background:color-mix(in srgb,var(--btn-bg,#edece8) 85%,var(--bg,#0c0c0b))}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:2px solid var(--cut,#f7703f);outline-offset:3px}"
+    },
+    {
+      "name": "Line Button",
+      "kind": "button",
+      "refersTo": "button-line",
+      "description": "Secondary actions beside a primary one.",
+      "html": "<a class=\"ds-btn-line\" href=\"#\">View on GitHub</a>",
+      "css": ".ds-btn-line{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 16px;border-radius:10px;border:1px solid var(--line-2,rgba(237,236,232,.15));color:var(--text,#edece8);font:500 15px/1 'Geist Variable',system-ui,sans-serif;text-decoration:none;transition:background 150ms}.ds-btn-line:hover{background:var(--raise,#1b1b19)}.ds-btn-line:focus-visible{outline:2px solid var(--cut,#f7703f);outline-offset:3px}"
+    },
+    {
+      "name": "Terminal",
+      "kind": "custom",
+      "refersTo": "terminal",
+      "description": "Tabbed terminal window replaying real command output.",
+      "html": "<div class=\"ds-term\"><div class=\"ds-term-bar\"><i></i><i></i><i></i><span class=\"on\">npm run smoke</span><span>npm test</span></div><div class=\"ds-term-body\"><p><span class=\"p\">$ </span>npm run smoke</p><p class=\"ok\">PASS  active: TOON table returned</p><p class=\"ok\">All checks passed</p></div></div>",
+      "css": ".ds-term{border-radius:14px;background:var(--m-bg,#0e0e0d);color:var(--m-text,#edece8);border:1px solid var(--m-line-2,rgba(237,236,232,.14));overflow:hidden;font:400 12px/1.8 'JetBrains Mono Variable',ui-monospace,monospace}.ds-term-bar{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;background:var(--m-bar,#141413);border-bottom:1px solid var(--m-line,rgba(237,236,232,.08))}.ds-term-bar i{width:11px;height:11px;border-radius:50%;background:var(--m-dot,#2c2c29)}.ds-term-bar span{padding:3px 10px;border-radius:6px;color:var(--m-text-3,#85847e)}.ds-term-bar span.on{background:var(--m-raise,#1f1f1d);color:var(--m-text,#edece8)}.ds-term-body{padding:16px 18px}.ds-term-body p{margin:0}.ds-term .p{color:var(--m-text-3,#85847e)}.ds-term .ok{color:var(--m-ok,#7fd4a0)}"
+    },
+    {
+      "name": "Contribute Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Link card with icon, title, one line and a mono destination.",
+      "html": "<a class=\"ds-card\" href=\"#\"><b>Report a bug</b><span>The template asks for doctor output and your agent.</span><code>bug_report.yml →</code></a>",
+      "css": ".ds-card{display:grid;gap:8px;padding:22px;border-radius:16px;border:1px solid var(--line,rgba(237,236,232,.08));background:color-mix(in srgb,var(--panel,#141413) 75%,transparent);color:var(--text,#edece8);text-decoration:none;font:400 14px/1.5 'Geist Variable',system-ui,sans-serif;transition:border-color 200ms,translate 200ms cubic-bezier(.16,1,.3,1)}.ds-card b{font-weight:560;font-size:16px}.ds-card span{color:var(--text-2,#a8a7a1)}.ds-card code{font:400 11.5px 'JetBrains Mono Variable',monospace;color:var(--text-3,#85847e)}.ds-card:hover{border-color:var(--line-2,rgba(237,236,232,.15));translate:0 -2px}.ds-card:focus-visible{outline:2px solid var(--cut,#f7703f);outline-offset:3px}"
+    },
+    {
+      "name": "Benchmark Bar",
+      "kind": "custom",
+      "refersTo": "bench",
+      "description": "A bar shrunk to the share that reaches the model, the cut part hatched orange.",
+      "html": "<div class=\"ds-bench\"><span>GitHub issue list</span><div class=\"ds-track\"><i style=\"transform:scaleX(.355)\"></i></div><b>−64.5%</b></div>",
+      "css": ".ds-bench{display:grid;grid-template-columns:160px 1fr 70px;gap:16px;align-items:center;color:var(--text,#edece8);font:500 14px 'Geist Variable',system-ui,sans-serif}.ds-bench b{font:500 18px 'JetBrains Mono Variable',monospace;text-align:right}.ds-track{position:relative;height:10px;border-radius:3px;background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--cut,#f7703f) 45%,transparent) 0 2px,transparent 2px 6px)}.ds-track i{position:absolute;inset:0;border-radius:3px;background:var(--text,#edece8);transform-origin:left;transition:transform 1600ms cubic-bezier(.16,1,.3,1)}"
+    },
+    {
+      "name": "Tab Pills",
+      "kind": "chip",
+      "refersTo": "tab",
+      "description": "Install-method and terminal session tabs.",
+      "html": "<div class=\"ds-tabs\"><button class=\"on\">release</button><button>npm</button></div>",
+      "css": ".ds-tabs{display:inline-flex;gap:2px;padding:6px;border-radius:14px;border:1px solid var(--line-2,rgba(237,236,232,.15))}.ds-tabs button{font:400 11.5px 'JetBrains Mono Variable',monospace;padding:5px 10px;border:0;border-radius:7px;background:none;color:var(--text-3,#85847e);cursor:pointer}.ds-tabs button.on{background:var(--raise,#1b1b19);color:var(--text,#edece8)}.ds-tabs button:hover{color:var(--text,#edece8)}.ds-tabs button:focus-visible{outline:2px solid var(--cut,#f7703f);outline-offset:2px}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Sticky translucent bar with mono wordmark, anchors, divider, icon actions.",
+      "html": "<nav class=\"ds-nav\"><b>mcp-token-optimizer</b><span><a href=\"#\">How it works</a><a href=\"#\">Docs</a></span></nav>",
+      "css": ".ds-nav{display:flex;justify-content:space-between;align-items:center;height:60px;padding:0 20px;border-bottom:1px solid var(--line,rgba(237,236,232,.08));background:color-mix(in srgb,var(--bg,#0c0c0b) 82%,transparent);backdrop-filter:blur(12px)}.ds-nav b{font:600 14px 'JetBrains Mono Variable',monospace;color:var(--text,#edece8)}.ds-nav a{font:400 14px 'Geist Variable',system-ui,sans-serif;color:var(--text-2,#a8a7a1);text-decoration:none;padding:8px 11px;border-radius:8px}.ds-nav a:hover{color:var(--text,#edece8);background:var(--raise,#1b1b19)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Night Console",
+    "overview": "The site is a developer's console late in the day: a near-black (or warm off-white) ground, hairline-framed content, and real working screens doing the talking. The product's mechanism is the visual language. Tokens arrive, noise is struck through in one warm orange, and what survives reaches the model. Every section shows a working artifact (an agent window, a pipeline, a terminal, a figure) with at most a line of copy beside it; prose never carries a section on its own.\n\nThe system is quiet and monochrome by default and spends colour on meaning only. One accent, the cut orange, marks what mto removes; a muted green marks what passed or was saved. There is no brand purple and no gradient decoration. Depth comes from real window chrome, soft long shadows under floating screens, and a faint dot-matrix field behind the page whose dots read as tokens.\n\nThe user rejected an earlier flat, windowless, text-heavy direction as tasteless and AI-generic; this system replaces it.",
+    "keyCharacteristics": [
+      "Near-black dark theme (`#0c0c0b`, never pure black) and a warm off-white light theme; both are first-class.",
+      "Real screens instead of illustrations: an agent app, terminals, config diffs, all fed with real product output.",
+      "One accent (cut orange) used only for what is removed; hatched orange for \"cut\" in charts.",
+      "Light headings (weight 560) with tight tracking; JetBrains Mono for everything a machine wrote.",
+      "Motion explains the mechanism: a timeline replay, scroll-linked reveals, bars that shrink to their saving."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Orange means \"cut by mto\". If an element is orange and nothing was removed, it is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Purple Rule",
+        "body": "No violet, no brand gradient, no glow colour. The user explicitly rejected the purple, AI-generic look.",
+        "section": "colors"
+      },
+      {
+        "name": "The Light Heading Rule",
+        "body": "Headings stay at 560. The user called a heavier hero \"way too bold\"; do not go above 600.",
+        "section": "typography"
+      },
+      {
+        "name": "The Machine Voice Rule",
+        "body": "If a program printed it or a person types it into one, it is set in JetBrains Mono. Marketing copy never is.",
+        "section": "typography"
+      },
+      {
+        "name": "The Screens Float, Pages Don't Rule",
+        "body": "Only real windows get a shadow; cards and tiles stay flat on hairlines.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** feed every visual with real product output (smoke results, the TOON list, the `mto_expand` note) and label replays as such.",
+      "**Do** keep code surfaces on their own ramp (`--m-*`) so they flip correctly between themes.",
+      "**Do** run every looping animation only while it is on screen and give it a finished static state under `prefers-reduced-motion`.",
+      "**Do** open every external link in a new tab through `externalLinks.ts`, never per link.",
+      "**Do** declare `minmax(0, 1fr)` on every grid track."
+    ],
+    "donts": [
+      "**Don't** use purple, gradients as decoration, glow, or neon accents.",
+      "**Don't** set headings heavier than 600 or make the hero louder than the agent window beneath it.",
+      "**Don't** add blinking or pulsing status dots.",
+      "**Don't** let a section be carried by prose; one line of copy beside a working artifact is the ceiling.",
+      "**Don't** use dot-matrix \"each dot is 2%\" charts; the user rejected them in favour of the shrinking bars.",
+      "**Don't** invent claims: no user counts, star counts, testimonials or an npm package before v3."
+    ]
+  }
+}

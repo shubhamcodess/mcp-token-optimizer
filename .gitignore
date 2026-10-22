@@ -5,3 +5,9 @@ dist
 examples/secrets.txt
 *.tgz
 .mto/
+
+# Impeccable review captures and build scratch (large, regenerated)
+.impeccable/review/
+.impeccable/build/
+.impeccable/mocks/
+.impeccable/hook.cache.json
