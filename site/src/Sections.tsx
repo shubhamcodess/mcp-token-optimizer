@@ -629,21 +629,21 @@ export function Maker() {
         <TiltCard className="dev reveal">
           <div className="dev__id">
             <img
-              src={`${BASE}maker.jpg`}
+              src={`${BASE}maker-figure.jpg`}
               alt={AUTHOR}
-              width="104"
-              height="130"
+              width="148"
+              height="222"
               loading="lazy"
             />
             <div>
               <h3>{AUTHOR}</h3>
               <p className="dev__role">Full Stack Developer · AI</p>
               <p className="dev__made">maker of mcp-token-optimizer</p>
+              <p className="dev__quote">
+                Built to stop agents paying for tool noise from MCP responses.
+              </p>
             </div>
           </div>
-          <p className="dev__quote">
-            Built to stop agents paying for tool noise from MCP responses.
-          </p>
           <dl className="dev__facts">
             <div>
               <dt>latest release</dt>

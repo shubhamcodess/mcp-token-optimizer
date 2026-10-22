@@ -2016,15 +2016,17 @@ h1 .cut::after {
   background: color-mix(in srgb, var(--panel) 75%, transparent);
 }
 .dev__id {
-  display: flex;
-  align-items: flex-end;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  align-items: center;
+  gap: 22px;
 }
 .dev__id img {
-  width: 104px;
-  height: 130px;
+  width: 148px;
+  height: 222px;
   object-fit: cover;
-  border-radius: 14px;
+  object-position: 50% 0;
+  border-radius: 18px;
   box-shadow: 0 0 0 1px var(--line-2);
   background: var(--raise);
 }
@@ -2545,4 +2547,23 @@ h1 .cut::after {
 }
 .dev__links {
   margin-top: auto;
+}
+
+.dev__id .dev__quote {
+  margin-top: 16px;
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+@media (max-width: 480px) {
+  .dev__id {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .dev__id img {
+    width: 112px;
+    height: 168px;
+  }
 }
