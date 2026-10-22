@@ -629,7 +629,7 @@ export function Maker() {
         <TiltCard className="dev reveal">
           <div className="dev__id">
             <img
-              src={`https://github.com/${GITHUB_USER}.png?size=160`}
+              src={`${BASE}maker.jpg`}
               alt={AUTHOR}
               width="64"
               height="64"
