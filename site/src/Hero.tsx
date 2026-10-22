@@ -26,7 +26,10 @@ export function Hero() {
       <div className="hero__top">
         <div className="hero__title">
           <a className="pill" href={`${import.meta.env.BASE_URL}docs/`}>
-            v{VERSION} · open source · self-hosted
+            <span>
+              v{VERSION}
+              <span className="pill__more"> · open source · self-hosted</span>
+            </span>
             <em>Read the docs</em>
           </a>
           <h1 id="hero-title">

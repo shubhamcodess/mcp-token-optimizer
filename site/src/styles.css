@@ -2567,3 +2567,16 @@ h1 .cut::after {
     height: 168px;
   }
 }
+
+.pill {
+  max-width: 100%;
+  white-space: nowrap;
+}
+.pill em {
+  flex: none;
+}
+@media (max-width: 480px) {
+  .pill__more {
+    display: none;
+  }
+}
