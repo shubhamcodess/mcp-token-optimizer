@@ -4,7 +4,7 @@ import { parse, parseDocument, stringify } from "yaml";
 import { ConfigSchema, defaultConfig, findConfigPath, HOME_DIR, type Config } from "./config.js";
 
 /** Where `config set` writes: the file the loader would use, or the default location if none exists yet. */
-export const configPath = (explicit?: string): string => findConfigPath(explicit) ?? explicit ?? join(HOME_DIR, "config.yaml");
+export const configPath = (explicit?: string): string => explicit ?? findConfigPath() ?? join(HOME_DIR, "config.yaml");
 
 /** `a.b."c.d".e` -> ["a","b","c.d","e"] (quote a segment that contains dots, e.g. a tool glob). */
 export function splitKey(key: string): string[] {
@@ -53,4 +53,17 @@ export function setConfigValue(file: string, key: string, raw: string): SetResul
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, String(doc));
   return { ok: true, path: file, value };
+}
+
+/** Remove one key (or a whole section) so it falls back to its default. Validated before writing; comments elsewhere survive. */
+export function unsetConfigValue(file: string, key: string): SetResult {
+  const path = splitKey(key);
+  if (!path.length || !existsSync(file)) return { ok: true, path: file, value: undefined };
+  const doc = parseDocument(readFileSync(file, "utf8"));
+  if (doc.errors.length) return { ok: false, error: `${file} is not valid YAML: ${doc.errors[0].message}` };
+  doc.deleteIn(path);
+  const check = ConfigSchema.safeParse(doc.toJS() ?? {});
+  if (!check.success) return { ok: false, error: check.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
+  writeFileSync(file, String(doc));
+  return { ok: true, path: file, value: undefined };
 }

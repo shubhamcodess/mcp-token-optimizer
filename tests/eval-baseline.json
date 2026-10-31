@@ -1,0 +1,33 @@
+{
+  "tolerance": 0.5,
+  "rows": {
+    "demo.list_issues": {
+      "savedPct": 64.8,
+      "verdict": "pruned-data"
+    },
+    "demo.build_log": {
+      "savedPct": 98.4,
+      "verdict": "summarized"
+    },
+    "demo.describe_configmap": {
+      "savedPct": 46.8,
+      "verdict": "equivalent"
+    },
+    "demo.fetch_guide": {
+      "savedPct": 34.8,
+      "verdict": "summarized"
+    },
+    "demo.get_page": {
+      "savedPct": 28,
+      "verdict": "summarized"
+    },
+    "demo.get_rows": {
+      "savedPct": 9,
+      "verdict": "unchanged"
+    },
+    "demo.read_file": {
+      "savedPct": 0,
+      "verdict": "summarized"
+    }
+  }
+}

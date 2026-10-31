@@ -33,6 +33,8 @@ This is a young project: only the latest release and `main` receive security fix
 - Client headers are forwarded verbatim to the configured upstream and are never logged, audited, or written to disk.
 - The audit log holds sizes only, never tool content.
 - The store (originals for `mto_expand`) and captures hold real tool output. They are created with `0600` files in a `0700` directory and expire (`retrieval.ttlMinutes`); captures exist only while `mto capture on` and are secret-redacted by pattern (best effort).
+- Local only: no telemetry, no cloud model providers; the only network traffic is to the user's configured MCP servers and a local Ollama.
+- The daemon and dashboard (`mto serve`, `mto ui`) bind to `127.0.0.1`, require a per-run bearer token (kept in `daemon.json`, mode 0600), accept only loopback `Host` and same-origin `Origin` headers, send no CORS headers, serve the UI with a CSP that allows only `'self'`, and expose no endpoint that runs a command or takes a file path: only a fixed list of named actions with validated arguments. On Windows, file modes are not enforced, so the token file relies on your user profile's permissions.
 - TLS verification is never disabled.
 
 ## Handling secrets when contributing or reporting

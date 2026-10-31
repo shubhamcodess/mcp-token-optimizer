@@ -27,7 +27,7 @@ export async function ensureDaemon(cfg: Config, opts: { force?: boolean; waitMs?
   if (!opts.force && (!cfg.ui.autoStart || process.env.MTO_NO_DAEMON)) return undefined;
   const cli = fileURLToPath(new URL("./cli.js", import.meta.url));
   try {
-    const child = spawn(process.execPath, [cli, "serve", "--port", String(cfg.ui.port)], { detached: true, stdio: "ignore", env: process.env });
+    const child = spawn(process.execPath, [cli, "serve", "--port", String(cfg.ui.port)], { detached: true, stdio: "ignore", env: process.env, windowsHide: true });
     child.on("error", () => undefined);
     child.unref();
   } catch {

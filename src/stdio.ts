@@ -11,6 +11,7 @@ import type { Runtime } from "./runtime.js";
 export function runStdioWrapper(rt: Runtime, name: string, command: string, args: string[]): Promise<number> {
   const session = rt.newSession(name);
   void rt.warm(); // load the local model in the background so the first summarization isn't a cold start
+  rt.watch((r) => process.stderr.write(r.ok ? "[mto] config reloaded\n" : `[mto] config change ignored (invalid): ${r.error}\n`));
   const detach = attachToDaemon(rt, name); // best-effort: registers with the daemon (starting it if allowed)
   const child = spawn(command, args, { stdio: ["pipe", "pipe", "inherit"], env: { ...process.env, MTO_WRAPPED: "1" } });
 

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Config, ToolRuleT } from "./config.js";
-import { matchesAny, toolRule } from "./config.js";
+import { matchesAny, toolRule, type ClientProfileT } from "./config.js";
 import type { LlmClient } from "./llm.js";
 import { buildPruneOptions, dedupeAcrossFields, prune } from "./prune.js";
 import { makeRedactor } from "./redact.js";
@@ -17,6 +17,8 @@ export interface CallContext {
   hasOutputSchema?: boolean;
   /** Effective mode for this call is shadow (result will be discarded): don't store originals or add notes. */
   shadow?: boolean;
+  /** Overrides for the connected client (from `clientInfo.name`); tool rules still win over it. */
+  clientProfile?: ClientProfileT;
 }
 
 export interface Report {
@@ -132,11 +134,14 @@ export class Pipeline {
     }
 
     if (isJson) {
-      const mustKeepJson = !!ctx.hasOutputSchema || flags.structured || matchesAny(this.cfg.format.jsonTools, subject) || rule.format === "json" || rule.format === "json-pretty" || (this.cfg.format.prettyJsonAboveTokens > 0 && estimateTokens(original) > this.cfg.format.prettyJsonAboveTokens);
+      const cp = ctx.clientProfile;
+      const profile = rule.profile ?? cp?.profile ?? this.cfg.profile;
+      const prettyAbove = cp?.prettyJsonAboveTokens ?? this.cfg.format.prettyJsonAboveTokens;
+      const mustKeepJson = !!ctx.hasOutputSchema || flags.structured || matchesAny(this.cfg.format.jsonTools, subject) || rule.format === "json" || rule.format === "json-pretty" || (prettyAbove > 0 && estimateTokens(original) > prettyAbove);
       value = parsed;
       // Outputs bound to a schema/structuredContent are contracts: minify only, never drop fields.
       if (!ctx.hasOutputSchema && !flags.structured) {
-        const opts = buildPruneOptions(this.cfg, rule);
+        const opts = buildPruneOptions({ ...this.cfg, profile }, rule);
         const pr = prune(parsed, opts);
         value = pr.value;
         if (pr.stats.droppedKeys || pr.stats.droppedEmpty) stages.push("prune");
@@ -145,7 +150,7 @@ export class Pipeline {
           noteParts.push(`pruned low-value fields: ${top}`);
         }
         if (pr.stats.lossy) lossy = true;
-        if (this.cfg.prune.dedupeAcrossFields ?? this.cfg.profile !== "conservative") {
+        if (this.cfg.prune.dedupeAcrossFields ?? profile !== "conservative") {
           const dd = dedupeAcrossFields(value);
           if (dd.runs) {
             value = dd.value;
@@ -158,8 +163,8 @@ export class Pipeline {
       const note = id ? `${noteParts.join("; ") || "condensed"}. Only if you need them: mto_expand {"id":"${id}","path":...}` : "";
       // Plain JSON must stay valid JSON, so the note travels as a top-level key (objects only); TOON/text get a trailing line.
       const jsonValue = note && value && typeof value === "object" && !Array.isArray(value) ? { ...(value as object), _mto: note } : value;
-      const format = rule.format ?? this.cfg.format.default;
-      const pretty = format === "json-pretty" || (this.cfg.format.prettyJsonAboveTokens > 0 && estimateTokens(original) > this.cfg.format.prettyJsonAboveTokens);
+      const format = rule.format ?? cp?.format ?? this.cfg.format.default;
+      const pretty = format === "json-pretty" || (prettyAbove > 0 && estimateTokens(original) > prettyAbove);
       const jsonText = pretty ? JSON.stringify(jsonValue, null, 2) : JSON.stringify(jsonValue);
       let best = jsonText;
       let noted = jsonValue !== value;

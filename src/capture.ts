@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlin
 import { join } from "node:path";
 import { HOME_DIR } from "./config.js";
 import type { RedactResult } from "./redact.js";
+import { estimateTokens } from "./tokens.js";
 
 /**
  * Opt-in local recording of RAW tool results so they can be replayed offline (`mto bench`) and shared for tuning.
@@ -45,4 +46,29 @@ export function readCaptures(dir = CAPTURE_DIR): Sample[] {
   return readdirSync(dir)
     .filter((f) => f.endsWith(".jsonl"))
     .flatMap((f) => readFileSync(join(dir, f), "utf8").split("\n").filter(Boolean).flatMap((l) => { try { return [JSON.parse(l) as Sample]; } catch { return []; } }));
+}
+
+export interface CaptureListItem {
+  id: number;
+  ts: string;
+  server: string;
+  tool: string;
+  originalTokens: number;
+  receivedTokens?: number;
+}
+
+/** Every file in the captures folder is a `.jsonl` of samples; list them newest first (metadata only). */
+export function listCaptures(dir = CAPTURE_DIR, limit = 100): { total: number; items: CaptureListItem[] } {
+  const all = readCaptures(dir);
+  const text = (r?: { content?: { text?: string }[] }) => (r?.content ?? []).map((c) => c.text ?? "").join("\n");
+  const items = all.map((x, id): CaptureListItem => ({ id, ts: x.ts, server: x.server, tool: x.tool, originalTokens: estimateTokens(text(x.result)), receivedTokens: x.optimized ? estimateTokens(text(x.optimized)) : undefined }));
+  return { total: all.length, items: items.slice(-limit).reverse() };
+}
+
+/** Delete every capture file. Only `.jsonl` files directly inside the captures folder are touched. */
+export function deleteCaptures(dir = CAPTURE_DIR): number {
+  if (!existsSync(dir)) return 0;
+  let n = 0;
+  for (const f of readdirSync(dir)) if (f.endsWith(".jsonl")) (unlinkSync(join(dir, f)), n++);
+  return n;
 }

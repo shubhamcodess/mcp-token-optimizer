@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { readdirSync, statSync } from "node:fs";
 import { homedir, platform } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { applyEdits, modify, parse, type ParseError } from "jsonc-parser";
 import { DEFAULT_PORT, loadRoutes, saveRoutes, type Routes } from "./routes.js";
 
@@ -65,7 +65,7 @@ export function agentTargets(cwd = process.cwd()): AgentTarget[] {
     { agent: "Claude Code (.mcp.json)", file: join(cwd, ".mcp.json"), keyPath: "mcpServers" },
     { agent: "Claude Desktop", file: join(appSupport, "Claude", "claude_desktop_config.json"), keyPath: "mcpServers" },
     { agent: "GitHub Copilot / VS Code (workspace)", file: join(cwd, ".vscode", "mcp.json"), keyPath: "servers" },
-    ...vscodeUserDirs.map((file) => ({ agent: `GitHub Copilot / VS Code (user: ${file.split("/").slice(-3, -2)[0]})`, file, keyPath: "servers" })),
+    ...vscodeUserDirs.map((file) => ({ agent: `GitHub Copilot / VS Code (user: ${basename(dirname(dirname(file)))})`, file, keyPath: "servers" })),
     { agent: "Cursor", file: join(h, ".cursor", "mcp.json"), keyPath: "mcpServers" },
     { agent: "Windsurf", file: join(h, ".codeium", "windsurf", "mcp_config.json"), keyPath: "mcpServers" },
     { agent: "Gemini CLI", file: join(h, ".gemini", "settings.json"), keyPath: "mcpServers" },
@@ -106,7 +106,7 @@ export interface Discovered {
   agent: string;
   file: string;
   keyPath: string;
-  servers: { name: string; kind: "stdio" | "http" | "sse" | "other"; wrapped: boolean }[];
+  servers: { name: string; kind: "stdio" | "http" | "sse" | "other"; wrapped: boolean; /** route name for an http server that points at the local proxy */ route?: string }[];
 }
 
 /** Read-only inventory of every MCP server list reachable from `targets`. */
@@ -135,6 +135,7 @@ export function discover(targets: AgentTarget[], proxyBase = `http://127.0.0.1:$
           name,
           kind: (s.command ? "stdio" : typeof s.url === "string" ? (s.type === "sse" ? "sse" : "http") : "other") as "stdio" | "http" | "sse" | "other",
           wrapped: isWrapped(s) || (typeof s.url === "string" && s.url.startsWith(proxyBase + "/")),
+          route: typeof s.url === "string" && s.url.startsWith(proxyBase + "/") ? decodeURIComponent(s.url.slice(proxyBase.length + 1)) : undefined,
         })),
       );
       if (servers.length) found.push({ agent: t.agent, file: t.file, keyPath: kp, servers });

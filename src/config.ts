@@ -14,12 +14,24 @@ const ToolRule = z
   .object({
     mode: z.enum(["active", "shadow", "off"]).optional(),
     format: Format.optional(),
+    /** Prune profile for this tool only (the advisor suggests `conservative` for tools the agent keeps expanding). */
+    profile: Profile.optional(),
     summarize: z.boolean().optional(),
     dropKeys: z.array(z.string()).optional(),
     keepKeys: z.array(z.string()).optional(),
     maxArrayItems: z.number().int().min(0).optional(),
   })
   .strict();
+
+/** Per-client overrides, keyed by a case-insensitive glob on `clientInfo.name`. First match wins; user entries come before the built-ins. */
+const ClientProfile = z
+  .object({
+    format: Format.optional(),
+    profile: Profile.optional(),
+    prettyJsonAboveTokens: z.number().int().min(0).optional(),
+  })
+  .strict();
+export type ClientProfileT = z.infer<typeof ClientProfile>;
 
 export const ConfigSchema = z
   .object({
@@ -129,6 +141,10 @@ export const ConfigSchema = z
         enabled: z.boolean().default(true),
         path: z.string().default(join(HOME_DIR, "stats.jsonl")),
         pricePerMTokUsd: z.number().default(3),
+        /** When stats.jsonl grows past this, old rows are rolled up into stats-daily.jsonl and trimmed. */
+        maxMb: z.number().positive().default(20),
+        /** Daily rollups older than this many days are dropped. */
+        keepDays: z.number().int().positive().default(90),
       })
       .default({}),
     /** The local daemon (dashboard API). Wrappers start it when it is not running; it never opens a browser by itself. */
@@ -136,6 +152,17 @@ export const ConfigSchema = z
       .object({
         autoStart: z.boolean().default(true),
         port: z.number().int().min(1).max(65535).default(8787),
+      })
+      .default({}),
+    /** Per-client overrides by `clientInfo.name` glob. An empty entry (`"visual studio code*": {}`) switches a built-in off. */
+    clients: z.record(ClientProfile).default({}),
+    /** Watch agent config files for new/unwrapped servers and removed wrappers. */
+    drift: z
+      .object({
+        enabled: z.boolean().default(true),
+        intervalSec: z.number().int().min(5).default(60),
+        /** Agents (case-insensitive name substrings) whose new servers are wrapped automatically. Empty = never touch configs on your own. */
+        autoWrap: z.array(z.string()).default([]),
       })
       .default({}),
     /** Per `server.tool` glob overrides. First match wins. */
@@ -182,4 +209,20 @@ export function matchesAny(globs: string[], subject: string): boolean {
 export function toolRule(cfg: Config, subject: string): ToolRuleT {
   for (const [glob, rule] of Object.entries(cfg.tools)) if (globToRegex(glob).test(subject)) return rule;
   return {};
+}
+
+/** Built-in client profiles. Each one cites the measurement behind it. */
+export const BUILTIN_CLIENT_PROFILES: Array<{ match: string; profile: ClientProfileT; source: string }> = [
+  {
+    match: "visual studio code*",
+    profile: { prettyJsonAboveTokens: 8000 },
+    source: "README section 7: VS Code Copilot saves large results to a file and parses them; on a 24.6k-token result pretty JSON saved 48.1% vs TOON 48.7% and avoided ~7 extra agent steps.",
+  },
+];
+
+/** Profile that applies to `clientName`: user entries first, then built-ins. `source` says where it came from. */
+export function clientProfile(cfg: Config, clientName?: string): { match: string; profile: ClientProfileT; source: string } | undefined {
+  if (!clientName) return undefined;
+  for (const [glob, profile] of Object.entries(cfg.clients)) if (globToRegex(glob).test(clientName)) return Object.keys(profile).length ? { match: glob, profile, source: "config" } : undefined;
+  return BUILTIN_CLIENT_PROFILES.find((b) => globToRegex(b.match).test(clientName));
 }

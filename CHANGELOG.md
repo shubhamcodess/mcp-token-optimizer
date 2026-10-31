@@ -4,9 +4,17 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+### Changed
+- Token counts are labelled as estimates in `stats`, `bench`, `compare`, `eval` and `status` output; `.claude/` is git-ignored; `mto config edit` quotes the file path; the auto-started daemon hides its console window on Windows. (#45)
+
 ### Added
 - **Local daemon** (`mto serve`): authenticated API under `/api/*` (status, stats, config, live event feed, models) with a per-run token, Host/Origin checks, no CORS and no command execution; process registry of connected proxies; wrappers auto-start it (`ui.autoStart`, `MTO_NO_DAEMON=1`); `mto status` and `mto ui`. (#11, #12, #13, #21)
 - **CLI help system:** `mto help [command|topic]`, `<command> --help`, did-you-mean for typos, `mto docs`, `mto about`, and `mto config path|get|set|edit` with schema validation and comment-preserving writes. (#17, #18, #20)
+- **Local dashboard** (`mto ui`, Preact + Vite, embedded in the package, no CDN): Overview, Traffic (filters, per-call detail, per-tool rules), Connections (status tree, per-server mode, wrap/unwrap with dry-run diff, backup restore), Config (schema form, raw YAML with diff, restore defaults), Captures, Eval, Doctor and Help; light and dark; strict CSP; token delivered in the URL fragment. A fixed allowlist of named actions: no shell, no command or path input. (#22, #23, #24, #25, #26, #27, #28, #29)
+- **Hot reload** of the config in the daemon and wrappers (#14); **audit rotation** with daily rollups and `mto stats --daily` (#15); **`mto service install|uninstall|status`** for launchd and systemd (#16).
+- **Per-client profiles** by `clientInfo.name` with a measured VS Code entry (#33); **drift watcher** with banner, `mto drift` and opt-in `drift.autoWrap` (#34); **advisor** and `mto advise` (#35); **tool-definition token cost** from `tools/list`, measurement only (#37).
+- **`mto eval`**: savings, lossless and fact-retention gates, baselines, JSON output and exit codes for CI; regression suite over the examples; fidelity check; saved run history and diffs in the dashboard. (#38, #39)
+- CI: dashboard bundle budget, regression suite, and a check that the packed tarball ships and serves the dashboard. (#42)
 - **Models:** `mto models` (list, `use`, `test`, `pull`) and matching daemon endpoints; selecting a model that is not pulled yet is allowed. (#31, #32)
 - GitHub Actions: docs link check, installable-package check and a single `CI gate` job in CI; CodeQL, gitleaks secret scan, dependency review, stale-issue handling, manual npm publish; Dependabot for npm and Actions.
 

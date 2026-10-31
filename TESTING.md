@@ -140,6 +140,23 @@ Confirm `json-pretty` output is valid, multi-line JSON:
 node dist/cli.js try examples/github-issues.json --config /tmp/json-pretty.yaml 2>/dev/null | node -e 'const t=require("fs").readFileSync(0,"utf8"); JSON.parse(t.replace(/\n\[mto:.*$/s,"")); console.log("valid JSON,", t.split("\n").length, "lines")'
 ```
 
+### 2.3b Regression gate with `mto eval`
+
+`mto eval` replays samples (the synthetic `examples/` with `--examples`, or your captures) and checks three things per run: **savings**, **lossless** (no value changed; named pruned fields are listed, not hidden) and **key-fact retention** (text results). It exits non-zero on a regression, so it can gate CI.
+
+```bash
+npm run eval                                        # examples vs tests/eval-baseline.json, lossless must be 100%
+mto eval --examples --json                          # machine-readable result + gate verdict
+mto eval --fail-under savings=50,lossless=100       # your captures, thresholds in percent
+mto eval --examples --baseline tests/eval-baseline.json --tolerance 0.5
+mto eval --examples --write-baseline tests/eval-baseline.json   # after an intentional change, regenerate and review the diff
+mto eval fidelity --tool kube_get_resource_details --path '$.manifest.data["app.properties"]' --file ./app.properties
+```
+
+Exit codes: `0` pass, `1` a gate failed, `2` usage error or no samples. The baseline holds the expected saving and verdict per tool; a change beyond the tolerance (default 0.5 points) or a different verdict fails. `mto eval` and `mto bench` use the same replay settings (no `mto_expand` note, no cache), so their numbers match each other; they are a little better than the `mto try` figures in 2.1 (for example 64.8% vs 64.5% on the issue list) because `try` appends the note. The same engine runs from the dashboard (Eval page) with run history and run-to-run diffs.
+
+CI runs `npm run eval` after the smoke test; a test (`tests/eval.test.ts`) proves that a deliberately worse config (`profile: conservative`) fails it.
+
 ### 2.4 Replay a whole set with `mto bench`
 
 ```bash
