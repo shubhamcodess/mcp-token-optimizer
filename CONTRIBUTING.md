@@ -19,6 +19,10 @@ By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). 
 | Share benchmark numbers for a model or tool | See [Sharing benchmark data](#sharing-benchmark-data) |
 | Fix a bug or build a feature | Comment on (or open) an issue first for anything bigger than a small fix, so we agree on the approach before you invest time |
 
+## Local only
+
+mto never sends anything off the machine except to the user's own MCP servers and a local Ollama on loopback. Do not add telemetry, cloud model providers, remote endpoints for the daemon or the dashboard, or anything that executes commands on the user's behalf from the UI. The daemon binds to `127.0.0.1`, requires its per-run token, checks Host and Origin and sends no CORS headers; keep it that way.
+
 ## Project principles
 
 These are the rules the code is judged against. A change that breaks one needs a very good reason.
@@ -42,6 +46,8 @@ npm install          # also builds (prepare script)
 npm run typecheck    # tsc --noEmit
 npm test             # unit + integration tests (node:test via tsx)
 npm run smoke        # 24 end-to-end assertions against the fake MCP server
+npm run eval         # regression gate: savings, lossless and verdict per example vs tests/eval-baseline.json
+npm run ui:budget    # dashboard bundle size budget (after npm run build)
 ```
 
 Handy commands:
@@ -103,6 +109,18 @@ Stages live in `src/pipeline.ts` (`compute`). A new stage must (a) be covered by
 
 Add it to the zod schema in `src/config.ts` with a default and a doc comment, wire it in, then document it in the README's *Configuration reference* and `mto.config.example.yaml`, and add a test.
 
+### Work on the dashboard
+
+The UI lives in `ui/` (Preact + TypeScript, built by Vite into `dist/ui`, which the daemon serves). Run `mto serve` (or `npm run dev -- serve`), then `npm run ui:dev` for hot reload; open the Vite URL once through `mto ui`-style fragment links (`http://127.0.0.1:5173/#t=<token from ~/.mcp-token-optimizer/daemon.json>`). Rules: no CDN and no inline scripts or styles (the daemon's CSP is `'self'` only), no new runtime dependencies for small things, light and dark must both work, and a page must never show tool content (sizes and decisions only). `npm run ui:budget` fails CI if the bundle grows past its budget.
+
+### Add a dashboard action
+
+Everything the dashboard can make the daemon do is a named entry in `src/actions.ts` (`ACTIONS` plus a `case` in `runAction`). Add the name and description, validate every argument strictly (enums, `validModelName`-style patterns, or "must be something the daemon itself lists"), never accept a command, a shell string or a file path from the client, route config writes through `setConfigValue` / `unsetConfigValue`, and add tests that an unknown name returns 404 and bad arguments return 400. `tests/ui.test.ts` pins the full list of action names, so a new one is a deliberate change.
+
+### Add a client profile
+
+Built-in profiles live in `BUILTIN_CLIENT_PROFILES` (`src/config.ts`). A profile must cite the measurement behind it in `source` (and in the README), must change only `format`, `profile` or `prettyJsonAboveTokens`, and needs a test showing the same result formats differently for that client and another.
+
 ### Add a local model to the benchmarks
 
 Follow [TESTING.md §5](TESTING.md#5-benchmarking-local-llms-on-your-data) and include the table it asks for. One synthetic document isn't proof, so results on more than one dataset are more useful.
@@ -113,7 +131,7 @@ Every push to `main` and every pull request runs these GitHub Actions:
 
 | Workflow | What it checks |
 |---|---|
-| **CI** (`ci.yml`) | typecheck, unit/integration tests and the end-to-end smoke test on Node 20 and 22 (Ubuntu, macOS); Markdown links and anchors (`npm run docs:check`); that `npm pack` produces an installable package; a final **`CI gate`** job that passes only if all of them passed |
+| **CI** (`ci.yml`) | typecheck, unit/integration tests and the end-to-end smoke test on Node 20 and 22 (Ubuntu, macOS); Markdown links and anchors (`npm run docs:check`); that `npm pack` produces an installable package that ships and serves the dashboard; the regression suite (`npm run eval`) and the dashboard bundle budget; a final **`CI gate`** job that passes only if all of them passed |
 | **CodeQL** (`codeql.yml`) | static security analysis (also weekly) |
 | **Secret scan** (`secret-scan.yml`) | gitleaks over the full history; synthetic fixtures are allow-listed in `.gitleaks.toml` |
 | **Dependency review** (`dependency-review.yml`) | blocks PRs that add dependencies with known high-severity vulnerabilities |

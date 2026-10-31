@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
+import { attachToDaemon } from "./daemonClient.js";
 import type { Runtime } from "./runtime.js";
 
 /**
@@ -10,6 +11,8 @@ import type { Runtime } from "./runtime.js";
 export function runStdioWrapper(rt: Runtime, name: string, command: string, args: string[]): Promise<number> {
   const session = rt.newSession(name);
   void rt.warm(); // load the local model in the background so the first summarization isn't a cold start
+  rt.watch((r) => process.stderr.write(r.ok ? "[mto] config reloaded\n" : `[mto] config change ignored (invalid): ${r.error}\n`));
+  const detach = attachToDaemon(rt, name); // best-effort: registers with the daemon (starting it if allowed)
   const child = spawn(command, args, { stdio: ["pipe", "pipe", "inherit"], env: { ...process.env, MTO_WRAPPED: "1" } });
 
   const toClient = (obj: unknown) => process.stdout.write(typeof obj === "string" ? obj + "\n" : JSON.stringify(obj) + "\n");
@@ -57,6 +60,6 @@ export function runStdioWrapper(rt: Runtime, name: string, command: string, args
       process.stderr.write(`[mto] failed to start "${command}": ${e.message}\n`);
       resolve(127);
     });
-    child.on("close", (code) => void tail.then(() => resolve(code ?? 0)));
+    child.on("close", (code) => void tail.then(() => detach()).then(() => resolve(code ?? 0)));
   });
 }

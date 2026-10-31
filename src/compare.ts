@@ -105,5 +105,5 @@ export function formatCompare(samples: Sample[], opts: { md?: boolean } = {}): s
     } else out.push(`  critical facts retained: ${d.factsKept}/${d.factsTotal}`);
   }
   const summary = Object.entries(tally).map(([k, n]) => `${n} ${k}`).join(", ");
-  return `${out.join("\n")}\n\n${samples.filter((s) => s.optimized).length} compared: ${summary || "nothing yet"}.\n"equivalent" = same information (only nulls/empties removed or duplicates pointed); "pruned-data" = named fields dropped (listed above); "value-changed" would be a bug.`;
+  return `${out.join("\n")}\n\n${samples.filter((s) => s.optimized).length} compared: ${summary || "nothing yet"}.\n"equivalent" = same information (only nulls/empties removed or duplicates pointed); "pruned-data" = named fields dropped (listed above); "value-changed" would be a bug.\nToken counts are estimates (model-agnostic): reliable for relative savings, not billing-exact.`;
 }

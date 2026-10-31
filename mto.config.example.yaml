@@ -55,6 +55,10 @@ retrieval:
   ttlMinutes: 240
   maxEntries: 500
 
+ui:                     # the local daemon (`mto serve`): dashboard API, process registry
+  autoStart: true       # stdio wrappers start it if it is not running; it never opens a browser
+  port: 8787
+
 discovery:              # where `mto init|discover` look for MCP config files, beyond the built-in agents
   files: []             # e.g. ["~/work/mcp.json", "~/x/settings.json#mcp.servers"]
   scanDirs: []          # e.g. ["~/Development"]   (finds mcp.json / .mcp.json / *mcp*.json, depth <= 4)

@@ -5,6 +5,7 @@ dist
 examples/secrets.txt
 *.tgz
 .mto/
+.claude/
 
 # Impeccable review captures and build scratch (large, regenerated)
 .impeccable/review/

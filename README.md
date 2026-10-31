@@ -31,6 +31,8 @@
 
 Every token an MCP tool returns is paid for, and fills the model's context window. Real tool output is mostly noise: `null` fields, hypermedia URLs, avatar and node ids, the same block repeated in two fields, ANSI and progress-bar spam, boilerplate prose. `mto` removes that noise **before the model sees it**, keeps an exact copy of anything it removed, and tells the agent how to get it back.
 
+> **Local only, always.** `mto` talks only to your own MCP servers and to a local Ollama on `127.0.0.1`. No telemetry, no cloud model providers, nothing leaves your machine. The dashboard and its API bind to loopback, need a per-run token, and cannot run arbitrary commands ([section 16](#16-security-and-privacy)).
+
 ## Results
 
 Measured, reproducible, no LLM involved (`npm run smoke`, [TESTING.md](TESTING.md) §2). Token counts are a model-agnostic estimate.
@@ -56,7 +58,8 @@ In that live A/B run, the three files the agent wrote from the optimized result 
 | 🔌 **Any MCP client** | stdio wrapper *and* local HTTP/SSE proxy; installs into VS Code Copilot, Claude, Cursor, Windsurf, Gemini CLI, Cline, Roo (JSONC-safe, reversible) |
 | 🧠 **Local summarization** | your Ollama model, your parameters, a hard latency budget and a fact-coverage guard; code and file reads are never summarized |
 | 🔐 **Private by design** | binds to `127.0.0.1`, no telemetry, credentials forwarded but never stored, optional secret redaction |
-| 🧪 **Measurable** | capture, bench, compare and stats built in; 42 tests and a 24-check end-to-end smoke test |
+| 🖥️ **Local dashboard** | `mto ui`: overview, live traffic, connections, config editor, eval history, advisor and drift warnings, served by the daemon, no CDN ([section 19](#19-the-dashboard)) |
+| 🧪 **Measurable** | capture, bench, compare and stats built in; 89 tests and a 24-check end-to-end smoke test |
 
 ## Quick start
 
@@ -82,6 +85,7 @@ No agent handy? `npm run demo` shows a tool call through the optimizer with samp
 | 🎛️ **Tune** | [6. Profiles](#6-optimization-profiles) · [7. Output formats](#7-output-formats-json-vs-toon) · [8. Summarization](#8-summarization-with-a-local-ollama-model) · [9. `mto_expand`](#9-getting-the-original-back-mto_expand) · [10. Redaction](#10-secret-detection-and-redaction) · [11. Capture, bench, compare](#11-capture-bench-compare-tuning-on-your-real-data) |
 | 📖 **Reference** | [12. Configuration reference](#12-configuration-reference) · [13. CLI reference](#13-cli-reference) · [14. Files & env vars](#14-files-and-environment-variables) |
 | 🛟 **Operate** | [15. Troubleshooting](#15-troubleshooting) · [16. Security & privacy](#16-security-and-privacy) · [17. Limitations & verification status](#17-known-limitations-and-verification-status) |
+| 🖥️ **Dashboard** | [19. The dashboard](#19-the-dashboard) |
 | 🤝 **Project** | [18. Development](#18-development) · [TESTING.md](TESTING.md) · [CONTRIBUTING.md](CONTRIBUTING.md) · [CHANGELOG.md](CHANGELOG.md) · [SECURITY.md](SECURITY.md) · [License](#license) |
 
 ---
@@ -116,7 +120,7 @@ git clone https://github.com/shubhamcodess/mcp-token-optimizer.git
 cd mcp-token-optimizer
 npm install
 npm run build
-node dist/cli.js --version                     # prints 0.1.0
+node dist/cli.js --version                     # prints 0.2.0
 ```
 
 **B. Install a prebuilt release tarball** (no clone, no build step)
@@ -124,7 +128,7 @@ node dist/cli.js --version                     # prints 0.1.0
 Download `mcp-token-optimizer-<version>.tgz` from the repository's **Releases** page (each tagged release attaches one, built by CI), then:
 
 ```bash
-npm install -g ./mcp-token-optimizer-0.1.0.tgz
+npm install -g ./mcp-token-optimizer-0.2.0.tgz
 mto --version
 ```
 
@@ -194,6 +198,15 @@ mkdir -p ~/.config/systemd/user
 sed -e "s#__NODE__#$(which node)#" -e "s#__MTO_DIR__#$(pwd)#" deploy/mto-serve.service > ~/.config/systemd/user/mto-serve.service
 systemctl --user daemon-reload && systemctl --user enable --now mto-serve
 ```
+
+**The daemon.** `mto serve` is also the local daemon: it serves a small authenticated API under `/api/*` (status, stats, live event feed, config, models) that the upcoming dashboard uses, and it keeps a registry of the wrappers that are connected. Stdio wrappers start it automatically if it is not running (single instance; it never opens a browser; opt out with `ui.autoStart: false` or `MTO_NO_DAEMON=1`).
+
+```bash
+mto status      # daemon up/down, connected proxies, last-24h savings (works offline from the audit log)
+mto ui          # start the daemon if needed and open http://127.0.0.1:8787/
+```
+
+The API needs a per-run bearer token (kept in `~/.mcp-token-optimizer/daemon.json`, mode 0600), accepts only loopback `Host` and same-origin `Origin` headers, sends no CORS headers and has no endpoint that runs commands. See [section 16](#16-security-and-privacy).
 
 Restart `mto serve` whenever you change `config.yaml`. The proxy reads config at start. (Stdio wrappers pick up the config each time the agent restarts that server.)
 
@@ -551,6 +564,15 @@ llm:
   think: false
 ```
 
+See, switch, test and download models without editing YAML (Ollama must be running):
+
+```bash
+mto models                     # pulled models with size/family; * marks the active one
+mto models use granite4:3b     # set llm.model (any name, even one you have not pulled yet)
+mto models test                # fixed summarization: key facts kept (of 5), seconds, tokens/s
+mto models pull llama3.2:3b    # download through your local Ollama (the only explicit download)
+```
+
 Measured on the author's Apple-silicon Mac with a synthetic 5k-token doc and a 20 s budget (one document; treat as a starting point and **benchmark on your own data**, see TESTING.md §6):
 
 | Model | Generation speed | Result |
@@ -780,6 +802,33 @@ File: `--config FILE` → `$MTO_CONFIG` → `./mto.config.yaml` → `~/.mcp-toke
 | `builtin` | `true` | include the built-in agent locations. `false` = only files you name (same as `--no-builtin`) |
 | `skip` | `[]` | built-in agents to ignore (substring of the name shown by `discover`; `--skip` may be repeated or comma-separated) |
 
+### `ui`: the daemon
+
+| Key | Default | Meaning |
+|---|---|---|
+| `autoStart` | `true` | stdio wrappers start `mto serve` if no daemon is running (single instance, never opens a browser) |
+| `port` | `8787` | port the auto-started daemon listens on (`mto serve --port` overrides) |
+
+### `clients`: per-client overrides
+
+Keyed by a case-insensitive glob on the client's `clientInfo.name`; first match wins and your entries come before the built-ins. Each entry may set `format`, `profile` and `prettyJsonAboveTokens`; tool rules (`tools:`) still win over it. One profile ships, with the measurement behind it: `visual studio code*` → `prettyJsonAboveTokens: 8000` (section 7). An empty entry switches a built-in off:
+
+```yaml
+clients:
+  "claude-*": { profile: conservative }
+  "visual studio code*": {}          # disable the built-in
+```
+
+The audit row, the live feed and `mto stats` show which profile applied.
+
+### `drift`
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | the daemon watches your agents' MCP configs for new unwrapped servers and wrappers that were removed |
+| `intervalSec` | `60` | how often (minimum 5) |
+| `autoWrap` | `[]` | agents (case-insensitive name substrings) whose new servers are wrapped automatically. Empty = mto never edits a config on its own |
+
 ### `cache`, `audit`
 
 | Key | Default | Meaning |
@@ -788,6 +837,8 @@ File: `--config FILE` → `$MTO_CONFIG` → `./mto.config.yaml` → `~/.mcp-toke
 | `audit.enabled` | `true` | append a size-only row per tool call to the audit log (never content) |
 | `audit.path` | `~/.mcp-token-optimizer/stats.jsonl` | log location |
 | `audit.pricePerMTokUsd` | `3` | $ per million input tokens, used by `mto stats` for the estimate |
+| `audit.maxMb` | `20` | past this size, rows older than 7 days are rolled up into `stats-daily.jsonl` and trimmed |
+| `audit.keepDays` | `90` | daily rollups older than this are dropped |
 
 ### `tools`: per-tool overrides
 
@@ -800,6 +851,7 @@ First matching glob wins. Globs match `server.tool` (case-insensitive, `*` and `
 | `summarize` | `false` to never summarize this tool |
 | `dropKeys` / `keepKeys` | extra prune globs for this tool |
 | `maxArrayItems` | array truncation for this tool |
+| `profile` | `conservative` \| `balanced` \| `aggressive` for this tool only |
 
 ```yaml
 tools:
@@ -820,13 +872,24 @@ mto discover [--scan dir] [--file path[#keyPath]] [--skip agent] [--no-builtin] 
 mto init      [--apply] [--only a,b] [--file f] [--scan d] [--skip agent] [--no-builtin] [--config f]   Wrap stdio servers, route http servers
 mto uninstall [--apply] [same discovery flags]                       Restore original commands/URLs
 mto wrap [--name n] [--config f] -- <cmd> [args…]                     Run one stdio MCP server through the optimizer
-mto serve [--port 8787] [--config f]                                  Local HTTP proxy for remote servers
+mto serve [--port 8787] [--config f]                                  Local daemon: HTTP proxy for remote servers + authenticated API
+mto status                                                             Daemon up/down, connected proxies, last-24h savings
+mto ui [--no-open]                                                     Start the daemon if needed and open the dashboard link
+mto models [use <name>|test [name]|pull <name>]                        List, choose, test or download local Ollama models
+mto config path|get [key]|set <key> <value>|edit|init                 Show, change (validated, comments kept) or create the config
+mto help [command|topic]   mto <command> --help                       Overview, per-command help, topics (modes, profiles, formats, local-only, security)
+mto docs [section] [--open]   mto about                                Where the docs are; version, license, data dir, daemon state
 mto try <file|-> [--tool t] [--server s] [--config f]                 Optimize a saved response; prints result + one-line summary on stderr
 mto capture on|off|status                                              Record raw (secret-redacted) tool results, live
 mto bench [dir] [--llm] [--models a,b] [--dump prefix] [--cap N]      Replay captures; savings, latency, fact retention
 mto compare [--tool glob] [--last N]                                   Original vs what the agent received
-mto stats [--since 7d|24h] [--json]                                    Token savings report (+ $ estimate, expand usage, secrets seen)
+mto stats [--since 7d|24h|30d] [--daily] [--json]                                    Token savings report (+ $ estimate, expand usage, secrets seen)
 mto doctor [--config f]                                                Check config, Ollama, model
+mto advise [--json]                                                    Recommendations from your own measurements (advisory)
+mto drift [wrap <server>|accept]                                       New unwrapped servers / removed wrappers in your agent configs
+mto eval [--examples|--dir d] [--fail-under k=n] [--baseline f] [--json]   Replay samples; gate on savings, lossless, facts (CI)
+mto eval fidelity --tool t --file f [--path p]                         Byte-compare a file the agent wrote with the captured original
+mto service status|install|uninstall [--apply]                         Run the daemon in the background (launchd / systemd --user)
 mto config init                                                        Write a default config file
 ```
 
@@ -847,6 +910,11 @@ Helper scripts (for testing and demos): `npm run examples` · `npm run demo` · 
 | `stats.jsonl` | audit log: one size-only row per tool call |
 | `store/` | originals for `mto_expand` (mode 0600, auto-expired) |
 | `captures/`, `capture.on` | recorded samples and the capture flag |
+| `stats-daily.jsonl` | per-day rollups of old audit rows (sizes only) |
+| `eval-history.jsonl` | saved dashboard eval runs (newest 50) |
+| `drift-baseline.json` | the agent servers mto has already seen (for drift warnings) |
+| `serve.log` | log of the background service (`mto service`) |
+| `daemon.json` | pid, port and per-run token of the running daemon (mode 0600; removed on exit) |
 | `<agent config>.mto.bak` | backups made by `init --apply` |
 
 | Variable | Effect |
@@ -854,6 +922,7 @@ Helper scripts (for testing and demos): `npm run examples` · `npm run demo` · 
 | `MTO_HOME` | use another data directory instead of `~/.mcp-token-optimizer` |
 | `MTO_CONFIG` | config file path |
 | `MTO_MCP_FILES` | extra MCP config files for `discover`/`init` (path-list, `:` separated on macOS/Linux) |
+| `MTO_NO_DAEMON=1` | wrappers never auto-start the daemon |
 | `MTO_DEBUG=1` | print per-chunk summarization decisions to stderr |
 | `MTO_NO_SYSTEM_CA=1` | don't auto-relaunch `mto serve` with `--use-system-ca` |
 
@@ -888,6 +957,7 @@ Helper scripts (for testing and demos): `npm run examples` · `npm run demo` · 
 
 * **Local only.** The proxy binds to `127.0.0.1`; only `Host: 127.0.0.1|localhost|[::1]` is accepted; only routes in `routes.json` are forwarded (no open proxy).
 * **Credentials pass through, never stored.** HTTP headers (API keys, `Authorization`) are forwarded to the configured upstream and are not logged, audited, or written to disk. **Do not paste keys into screenshots or chat; the demo config uses fake values.**
+* **The daemon API is locked down.** `/api/*` requires a per-run bearer token, accepts only loopback `Host` and same-origin `Origin` headers, sends no CORS headers, and offers no way to run arbitrary commands: only fixed, named actions (for example select, test or pull a model by name). Live-feed rows hold sizes only.
 * **The audit log holds sizes only.** `stats.jsonl` never contains tool content.
 * **Stored originals** (`store/`) and **captures** hold real tool output, with `0600` files in a `0700` directory; captures are secret-redacted (pattern-based). Retention: `retrieval.ttlMinutes`; captures until you delete them.
 * **TLS is never disabled.** A private CA is trusted via the OS store (`--use-system-ca`) or `NODE_EXTRA_CA_CERTS`.
@@ -930,15 +1000,63 @@ src/
   text.ts         cleanup, HTML, code sniff  llm.ts        Ollama client, circuit breaker
   redact.ts       secret patterns            store.ts      originals for mto_expand
   audit.ts        stats log/report           capture.ts / bench.ts / compare.ts   tuning loop
+  daemon.ts       authenticated local API    registry.ts / daemonClient.ts   connected proxies, auto-start
+  help.ts         CLI help + did-you-mean    configEdit.ts   `config get|set` (shared with the API)
 examples/  synthetic sample data + fake MCP server      scripts/  mcp-call.mjs, smoke.mjs, make-examples.mjs
-deploy/    launchd + systemd templates                  tests/    42 tests (node:test)
+deploy/    launchd + systemd templates                  tests/    89 tests (node:test)
 ```
 
 ```bash
-npm test             # 42 tests: TOON fuzz, pipeline guardrails, installer/JSONC, HTTP proxy, stdio e2e, expand
+npm test             # 89 tests: TOON fuzz, pipeline guardrails, installer/JSONC, HTTP proxy, stdio e2e, expand
 npm run typecheck
 npm run smoke        # 24 end-to-end assertions with the fake server
 ```
+
+---
+
+---
+
+## 19. The dashboard
+
+> A local web UI served by the daemon: watch what mto does, change settings safely, and measure before you roll out.
+
+```bash
+mto ui          # starts the daemon if needed and opens http://127.0.0.1:8787/
+```
+
+`mto ui` opens the page with the per-run token in the URL *fragment* (never sent to the server, removed from the address bar on load). Opening the plain URL only shows "run `mto ui`". Stdio wrappers start the daemon automatically (`ui.autoStart`); it never opens a browser by itself. Keep it running in the background with `mto service install --apply` (macOS launchd, Linux systemd user unit).
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/ui-overview-dark.png">
+    <img src="docs/screenshots/ui-overview-light.png" alt="The Overview page: ingress and egress tokens, saved percentage, a seven-day trend, top tools, connected proxies, live feed, advisor and tool definition cost." width="900">
+  </picture>
+</p>
+
+| Page | What it does |
+|---|---|
+| **Overview** | ingress / egress tokens, saved %, 7-day trend, top tools, connected proxies, live feed, `mto_expand` rate, the advisor and the token cost of tool definitions (`tools/list`, measured, never modified) |
+| **Traffic** | live feed with filters (client, server, tool, stage, mode, lossy), per-call detail (sizes, stages, latency, expand note, client profile) and a per-tool table with a rules editor. No tool content is shown |
+| **Connections** | agent → config file → server tree with protected / unprotected / proxy-down status; per-server mode (a soft disconnect that applies instantly); wrap and unwrap with a dry-run diff first; restore from the `.mto.bak` backup |
+| **Config** | a form generated from the schema, a raw YAML editor with validation and a diff before saving, "restore defaults" per section. Comments in your file survive; some keys (audit path, discovery, Ollama URL) stay in the file |
+| **Captures** | only while `mto capture on`: redacted original vs what the agent received, with the compare verdict, and delete-all. Contains real tool output: treat as sensitive |
+| **Eval** | replay captures or the examples through the current config plus a candidate (profile, format, pretty-JSON threshold); savings, lossless check, facts kept; saved run history with diffs; a fidelity check of pasted text against a captured original |
+| **Doctor / Help** | health checks, the allowlisted actions (mode, capture, model test) and a command cheat sheet |
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/ui-connections-dark.png">
+    <img src="docs/screenshots/ui-connections-light.png" alt="The Connections page: agents, servers, protection status, per-server mode switch and wrap or unwrap buttons." width="900">
+  </picture>
+</p>
+
+**Self-aware extras.** The daemon also watches your agents' configs and shows a banner when a new server appears unwrapped or a wrapper was removed (one click to wrap, never automatic unless you set `drift.autoWrap`); the **advisor** turns your own measurements into recommendations (for example "the agent expanded 4 of 6 calls: use the conservative profile for this tool") with the numbers behind each, applied only when you press the button; and **per-client profiles** adapt output to the connecting client (see `clients`, section 12).
+
+**Hot reload.** Editing the config (by hand, `mto config set`, or the dashboard) applies live in the daemon and in wrappers. The audit path, the retrieval store limits and `ui.port` need a restart.
+
+**What the dashboard can and cannot do.** It can run only a fixed list of named actions (switch mode, toggle capture, test a model, wrap or unwrap a server you can see in the list, apply an advisor recommendation, edit config keys, run an eval, delete captures). There is no terminal and no endpoint that takes a command or a path from the page. See [section 16](#16-security-and-privacy).
+
+**Development.** The UI is Preact + TypeScript built with Vite into `dist/ui` (no CDN, fonts self-hosted); `npm run ui:dev` runs it with hot reload against a daemon on 8787, and `npm run ui:budget` enforces the bundle size budget used in CI.
 
 ---
 

@@ -1,4 +1,5 @@
 import type { Audit } from "./audit.js";
+import { clientProfile } from "./config.js";
 import { captureEnabled, writeCapture } from "./capture.js";
 import { makeRedactor } from "./redact.js";
 import { toolRule, type Config } from "./config.js";
@@ -69,6 +70,8 @@ export class Session {
   private pending = new Map<string | number, Pending>();
   private outputSchemaTools = new Set<string>();
   private clientName?: string;
+  /** note id -> tool whose result carried it, so an expand can be attributed to a tool (advisor) */
+  private expandIds = new Map<string, string>();
   private captureRedact: ReturnType<typeof makeRedactor>;
 
   constructor(
@@ -87,7 +90,7 @@ export class Session {
       if (msg.id !== undefined && msg.id !== null && typeof msg.method === "string") {
         if (msg.method === "tools/call" && msg.params?.name === EXPAND_TOOL && this.store && this.cfg.retrieval.enabled) {
           const reply = this.expand(msg);
-          this.audit.write({ ts: new Date().toISOString(), server: this.server, tool: EXPAND_TOOL, client: this.clientName, mode: "active", tokensIn: 0, tokensOut: estimateTokens(JSON.stringify(reply.result?.content ?? "")), stages: [reply.result?.isError ? "expand-miss" : "expand"], lossy: false, redactions: {}, latencyMs: 0 });
+          this.audit.write({ ts: new Date().toISOString(), server: this.server, tool: EXPAND_TOOL, client: this.clientName, mode: "active", tokensIn: 0, tokensOut: estimateTokens(JSON.stringify(reply.result?.content ?? "")), stages: [reply.result?.isError ? "expand-miss" : "expand"], lossy: false, redactions: {}, latencyMs: 0, expandOf: this.expandIds.get(String(msg.params?.arguments?.id ?? "")) });
           return { reply };
         }
         this.pending.set(msg.id, { method: msg.method, tool: msg.params?.name });
@@ -157,6 +160,7 @@ export class Session {
       };
       out = tools.map((t) => ({ ...t, inputSchema: clean(t.inputSchema), ...(t.outputSchema ? { outputSchema: clean(t.outputSchema) } : {}) }));
     }
+    this.audit.write({ ts: new Date().toISOString(), server: this.server, tool: "tools/list", client: this.clientName, mode: this.cfg.mode === "shadow" ? "shadow" : "active", tokensIn: estimateTokens(JSON.stringify(tools)), tokensOut: estimateTokens(JSON.stringify(out)), stages: ["tools-list"], lossy: false, redactions: {}, latencyMs: 0 });
     if (this.store && this.cfg.retrieval.enabled && this.canOptimize && !msg.result.nextCursor && !out.some((t) => t.name === EXPAND_TOOL)) {
       out = [...out, EXPAND_DEF];
     }
@@ -167,13 +171,20 @@ export class Session {
     const rule = toolRule(this.cfg, `${this.server}.${tool}`);
     const mode = rule.mode ?? this.cfg.mode;
     if (mode === "off") return msg;
+    const cp = clientProfile(this.cfg, this.clientName);
     const { result, report } = await this.pipeline.optimizeResult(msg.result, {
       server: this.server,
       tool,
+      clientProfile: cp?.profile,
       hasOutputSchema: this.outputSchemaTools.has(tool),
       shadow: mode === "shadow",
     });
     if (captureEnabled()) writeCapture(this.server, tool, this.outputSchemaTools.has(tool), msg.result, this.captureRedact, mode === "shadow" ? undefined : result);
+    const noteId = mode === "shadow" ? undefined : /mto_expand \{\\*"id\\*":\\*"([0-9a-f]+)/.exec(JSON.stringify(result))?.[1];
+    if (noteId) {
+      this.expandIds.set(noteId, tool);
+      if (this.expandIds.size > 500) this.expandIds.delete(this.expandIds.keys().next().value as string);
+    }
     this.audit.write({
       ts: new Date().toISOString(),
       server: this.server,
@@ -186,6 +197,8 @@ export class Session {
       lossy: report.lossy,
       redactions: report.redactions,
       latencyMs: report.latencyMs,
+      profile: cp?.match,
+      noted: !!noteId,
     });
     return mode === "shadow" ? msg : { ...msg, result };
   }

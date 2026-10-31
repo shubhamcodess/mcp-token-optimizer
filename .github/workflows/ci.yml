@@ -31,6 +31,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run smoke
+      - name: Dashboard bundle budget (JS, CSS, fonts, total; no external URLs)
+        run: npm run ui:budget
+      - name: Regression suite (savings, lossless and verdict per example against tests/eval-baseline.json)
+        run: npm run eval
 
   docs:
     name: Docs links
@@ -62,6 +66,23 @@ jobs:
           npm install -g --prefix "$P" ./mcp-token-optimizer-*.tgz
           "$P/bin/mto" --version
           MTO_HOME="$P/home" "$P/bin/mto" try "$P/lib/node_modules/mcp-token-optimizer/examples/github-issues.json" 2>&1 >/dev/null | tee /dev/stderr | grep -q "saved"
+      - name: The tarball ships the dashboard and an installed copy serves it
+        run: |
+          set -euo pipefail
+          LIST="$(tar -tzf mcp-token-optimizer-*.tgz)"
+          grep -q 'package/dist/ui/index.html' <<< "$LIST"
+          grep -q 'package/dist/ui/assets/' <<< "$LIST"
+          P="$(mktemp -d)"
+          npm install -g --prefix "$P" ./mcp-token-optimizer-*.tgz
+          export MTO_HOME="$P/home" MTO_NO_DAEMON=1
+          "$P/bin/mto" serve --port 18787 > "$P/serve.log" 2>&1 &
+          PID=$!
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:18787/health >/dev/null && break; sleep 0.5; done
+          curl -sf http://127.0.0.1:18787/ | grep -q 'mto dashboard'
+          curl -s -D - -o /dev/null http://127.0.0.1:18787/ | grep -qi "content-security-policy: default-src 'none'"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18787/api/status)" = "401"
+          "$P/bin/mto" status | grep -q 'daemon: UP'
+          kill $PID
 
   # Single required status check for branch protection: it passes only if every job above passed.
   gate:

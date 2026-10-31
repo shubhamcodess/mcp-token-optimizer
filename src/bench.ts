@@ -42,6 +42,6 @@ export function formatBench(rows: BenchRow[]): string {
   const line = (r: BenchRow) =>
     `${r.key.slice(0, 34).padEnd(34)} ${String(r.n).padStart(4)} ${String(r.tin).padStart(8)} ${String(r.tout).padStart(8)} ${(r.tin ? (100 * (r.tin - r.tout)) / r.tin : 0).toFixed(1).padStart(6)}% ${String(r.lossy).padStart(5)} ${(r.ms / r.n).toFixed(0).padStart(7)} ${(r.factsTotal ? `${((100 * r.factsKept) / r.factsTotal).toFixed(0)}%` : "-").padStart(7)}  ${[...r.stages].join(",")}`;
   const t = rows.reduce((a, r) => ({ ...a, n: a.n + r.n, tin: a.tin + r.tin, tout: a.tout + r.tout, lossy: a.lossy + r.lossy, ms: a.ms + r.ms, factsKept: a.factsKept + r.factsKept, factsTotal: a.factsTotal + r.factsTotal }), { key: "TOTAL", n: 0, tin: 0, tout: 0, lossy: 0, ms: 0, stages: new Set<string>(), factsKept: 0, factsTotal: 0 } as BenchRow);
-  return [head, "-".repeat(head.length), ...rows.slice(0, 30).map(line), "-".repeat(head.length), line(t)].join("\n");
+  return [head, "-".repeat(head.length), ...rows.slice(0, 30).map(line), "-".repeat(head.length), line(t), "", "Token counts are estimates (model-agnostic): reliable for relative savings, not billing-exact."].join("\n");
 }
 void estimateTokens;
