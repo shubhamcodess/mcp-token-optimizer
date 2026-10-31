@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-31
+
+Security fix and documentation restructure. No change to the optimization pipeline or the CLI surface.
+
+### Security
+- **zod upgraded from 3.25.76 to 4.6.7** to fix CVE-2023-54404 / GHSA-mrhx-c7xc-m3w5 (uncontrolled resource consumption in array parsing, HIGH). Config defaults are unchanged: object sections use `.prefault()` so zod 4 still applies inner defaults. (#63)
+
+### Changed
+- The README is now a short landing page. The long reference moved to `docs/` (getting started, how it works, tuning, reference, dashboard), `TROUBLESHOOTING.md`, and into `SECURITY.md`, `TESTING.md` and `CONTRIBUTING.md`. (#61)
+
 ## [0.2.1] - 2026-10-31
 
 First release on npm: `npm install -g @shubhamcodess/mcp-token-optimizer`. No functional changes to the CLI or the dashboard.
