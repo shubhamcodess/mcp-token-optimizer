@@ -12,11 +12,14 @@ const from = process.argv.includes("--from") ? process.argv[process.argv.indexOf
 let json;
 if (from) json = readFileSync(from, "utf8");
 else {
-  const r = spawnSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: root, encoding: "utf8", shell: process.platform === "win32" });
+  const r = spawnSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: root, encoding: "utf8", shell: process.platform === "win32", env: { ...process.env, npm_config_ignore_scripts: "true" } });
   if (r.status !== 0) (console.error(r.stderr || r.stdout), process.exit(2));
   json = r.stdout;
 }
-const pack = JSON.parse(json)[0];
+// some npm versions still run `prepack` for --dry-run and print its output first: take the trailing JSON array
+const arr = /(?:^|\n)(\[\s*\{[\s\S]*\])\s*$/.exec(json)?.[1];
+if (!arr) (console.error("could not read `npm pack --json` output:\n" + json.slice(0, 500)), process.exit(2));
+const pack = JSON.parse(arr)[0];
 const paths = pack.files.map((f) => f.path);
 const has = (p) => paths.includes(p);
 const under = (prefix) => paths.some((p) => p.startsWith(prefix));

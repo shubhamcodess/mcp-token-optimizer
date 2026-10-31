@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -17,6 +17,13 @@ test("pack check: the real tarball passes (scoped name, dashboard shipped, nothi
   const r = run();
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert.match(r.stdout, /@shubhamcodess\/mcp-token-optimizer@/);
+});
+
+test("pack check: tolerates build output printed before the JSON listing (older npm runs prepack)", () => {
+  const f = listing(GOOD);
+  const noisy = join(mkdtempSync(join(tmpdir(), "mto-pack-")), "noisy.json");
+  writeFileSync(noisy, `\u001b[36mvite v8\u001b[39m building...\n[1/2] done\n${readFileSync(f, "utf8")}\n`);
+  assert.equal(run(["--from", noisy]).status, 0);
 });
 
 test("pack check: fails on a missing required file, a forbidden path, an oversized tarball and an unscoped name", () => {
