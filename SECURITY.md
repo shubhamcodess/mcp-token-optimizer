@@ -37,6 +37,10 @@ This is a young project: only the latest release and `main` receive security fix
 - The daemon and dashboard (`mto serve`, `mto ui`) bind to `127.0.0.1`, require a per-run bearer token (kept in `daemon.json`, mode 0600), accept only loopback `Host` and same-origin `Origin` headers, send no CORS headers, serve the UI with a CSP that allows only `'self'`, and expose no endpoint that runs a command or takes a file path: only a fixed list of named actions with validated arguments. On Windows, file modes are not enforced, so the token file relies on your user profile's permissions.
 - TLS verification is never disabled.
 
+## npm publishing
+
+The package is published from GitHub Actions only, with a provenance attestation that links each npm version to the workflow run and commit that built it. The publishing credential is a granular npm access token limited to this package (or scope), kept only as the repository secret `NPM_TOKEN`; it is never printed, written to disk by our scripts or available to pull requests from forks. Rotate it at least yearly and immediately if it may have leaked. The scoped name `@shubhamcodess/mcp-token-optimizer` is the only official package: the unscoped `mcp-token-optimizer` on npm is an unrelated project.
+
 ## Handling secrets when contributing or reporting
 
 Never paste real API keys, tokens, or captured tool output into issues, pull requests, or logs. If you accidentally did, rotate the credential immediately, then tell us so the content can be removed. Test fixtures must build token-shaped strings from fragments so the repository never contains a live-looking secret literal.

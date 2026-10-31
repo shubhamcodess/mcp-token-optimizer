@@ -161,10 +161,30 @@ Real tool output can contain company data. Before you paste anything into an iss
 
 ## Releases (maintainers)
 
-1. Update `CHANGELOG.md` (move *Unreleased* under the new version) and `version` in `package.json`.
-2. `npm run typecheck && npm test && npm run smoke`.
-3. Commit, then tag and push: `git tag vX.Y.Z && git push origin main --tags`.
-4. The **Release** workflow builds, tests and attaches an installable tarball (`npm pack`) to the GitHub release.
+The package is published to npm as **`@shubhamcodess/mcp-token-optimizer`**. The unscoped name `mcp-token-optimizer` belongs to an unrelated project on the registry, which is why the scope is part of the name. The commands it installs are still `mto` and `mcp-token-optimizer`.
+
+**Release steps**
+
+1. Update `CHANGELOG.md` (move *Unreleased* under the new version) and `version` in `package.json` (and `site/src/data.ts` if the landing page should show it).
+2. `npm run typecheck && npm test && npm run smoke && npm run eval && npm run pack:check`.
+3. Commit and merge to `main`, then tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+4. Two workflows run on the tag. **Release** builds, tests and attaches the tarball (`shubhamcodess-mcp-token-optimizer-X.Y.Z.tgz`) to the GitHub release. **Publish to npm** runs every check again (tag equals `package.json` version, tests, smoke, eval, bundle budget, `pack:check`), publishes with provenance (`--tag next` for versions with a `-` pre-release part), and then the `verify` job installs the published version from the registry and runs it (`scripts/verify-registry.sh`).
+5. Check the npm page: the provenance badge, README, both bin names, license.
+
+**One-time setup for npm publishing**
+
+1. The scope must exist on npm: a user or organization named `shubhamcodess` (or change the scope in `package.json`).
+2. On npmjs.com create a **granular access token**: read and write permission for this package (or scope), expiry at most one year, "Bypass two-factor authentication" enabled (CI cannot type a code).
+3. Save it as the repository secret **`NPM_TOKEN`** (Settings, Secrets and variables, Actions). Nothing else is needed: provenance uses the workflow's OIDC identity.
+
+Until `NPM_TOKEN` exists, a tag push runs all checks and logs "nothing published". Once you have added it, re-run the **Publish to npm** workflow on the tag, or run it by hand first as a **dry run** (the default) to read the file list. A real manual run must start from a tag, and it refuses a version that is already on the registry, so re-runs are safe.
+
+**If a bad version goes out**
+
+- Do not reuse a version number. Publish a fixed patch release.
+- Warn people on the bad version with `npm deprecate "@shubhamcodess/mcp-token-optimizer@X.Y.Z" "reason, use X.Y.Z+1"`.
+- `npm unpublish` is only for a security problem and only within npm's allowed window; say why in the release notes.
+- If the token leaked: revoke it on npmjs.com first, create a new one, update `NPM_TOKEN`, and check the package's publish history.
 
 ## Ideas for first contributions
 

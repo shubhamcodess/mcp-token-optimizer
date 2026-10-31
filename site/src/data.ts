@@ -1,18 +1,20 @@
 export const REPO = 'https://github.com/shubhamcodess/mcp-token-optimizer'
-export const VERSION = '0.1.0'
+export const VERSION: string = '0.1.0'
 export const AUTHOR = 'Shubham Prakash'
 export const GITHUB_USER = 'shubhamcodess'
 // Set to the author's LinkedIn profile URL to show the link in the Maker section.
 export const LINKEDIN = 'https://www.linkedin.com/in/shubham-prakash-dev/'
-export const TARBALL = `mcp-token-optimizer-${VERSION}.tgz`
+// 0.2.0 was attached as mcp-token-optimizer-0.2.0.tgz; from 0.2.1 the tarball is shubhamcodess-mcp-token-optimizer-<version>.tgz
+export const TARBALL = ['0.1.0', '0.2.0'].includes(VERSION) ? `mcp-token-optimizer-${VERSION}.tgz` : `shubhamcodess-mcp-token-optimizer-${VERSION}.tgz`
 export const TARBALL_URL = `${REPO}/releases/download/v${VERSION}/${TARBALL}`
 
 export const LATEST_URL = `${REPO}/releases/latest`
 // Resolves the newest release's .tgz through the GitHub API, so the command never goes stale.
 export const DOWNLOAD_LATEST = `curl -fsSL https://api.github.com/repos/${GITHUB_USER}/mcp-token-optimizer/releases/latest | grep -o '"browser_download_url": *"[^"]*\\.tgz"' | cut -d'"' -f4 | xargs curl -fsSLO`
-export const INSTALL_LATEST = 'npm install -g ./mcp-token-optimizer-*.tgz'
+export const INSTALL_LATEST = 'npm install -g ./*mcp-token-optimizer-*.tgz' // matches the old (0.2.0) and scoped tarball names
 export const INSTALL_ONE_LINER = `${DOWNLOAD_LATEST} && ${INSTALL_LATEST}`
-export const INSTALL_NPM = 'npm install -g mcp-token-optimizer'
+// the unscoped name belongs to another project on npm: always use the scoped package
+export const INSTALL_NPM = 'npm install -g @shubhamcodess/mcp-token-optimizer'
 
 
 

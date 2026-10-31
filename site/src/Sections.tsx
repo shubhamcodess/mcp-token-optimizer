@@ -316,7 +316,7 @@ const INSTALL_TABS: TermTab[] = [
       { k: 'cmd', t: 'mto --version' },
       { k: 'out', t: '0.1.0' },
       { k: 'gap' },
-      { k: 'com', t: '# npm install -g mcp-token-optimizer  (coming in v3)' },
+      { k: 'com', t: '# npm install -g @shubhamcodess/mcp-token-optimizer  (from 0.2.1)' },
     ],
   },
   {
