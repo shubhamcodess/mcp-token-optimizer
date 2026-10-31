@@ -9,7 +9,7 @@ import { createInterface } from "node:readline";
 test("stdio wrapper: optimizes tool results, injects mto_expand, answers it locally", async () => {
   const home = mkdtempSync(join(tmpdir(), "mto-e2e-"));
   const child = spawn(process.execPath, ["--import", "tsx", "src/cli.ts", "wrap", "--name", "fake", "--", process.execPath, "tests/fake-server.mjs"], {
-    env: { ...process.env, MTO_HOME: home },
+    env: { ...process.env, MTO_HOME: home, MTO_NO_DAEMON: "1" },
     stdio: ["pipe", "pipe", "inherit"],
   });
   const waiting = new Map<number, (m: any) => void>();

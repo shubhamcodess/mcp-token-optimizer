@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const home = mkdtempSync(join(tmpdir(), "mto-smoke-"));
-const env = { ...process.env, MTO_HOME: home };
+const env = { ...process.env, MTO_HOME: home, MTO_NO_DAEMON: "1" };
 let failed = 0;
 const check = (name, ok, detail = "") => {
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? `  (${detail})` : ""}`);

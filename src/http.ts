@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import type { Daemon } from "./daemon.js";
 import { loadRoutes, ROUTES_FILE } from "./routes.js";
 import type { Runtime } from "./runtime.js";
 import type { Session } from "./session.js";
@@ -23,7 +24,7 @@ const readBody = async (req: IncomingMessage): Promise<string> => {
  * Client headers (API keys, auth) are forwarded verbatim and never logged or stored. Handles JSON and SSE
  * responses (transformed event-by-event, in order) and tracks per-`Mcp-Session-Id` state.
  */
-export function startHttpProxy(rt: Runtime, opts: { port: number; routesFile?: string; host?: string }): Promise<Server> {
+export function startHttpProxy(rt: Runtime, opts: { port: number; routesFile?: string; host?: string; daemon?: Daemon }): Promise<Server> {
   const routesFile = opts.routesFile ?? ROUTES_FILE;
   const sessions = new Map<string, Session>();
 
@@ -72,6 +73,8 @@ export function startHttpProxy(rt: Runtime, opts: { port: number; routesFile?: s
     };
     // DNS-rebinding guard: only loopback Host headers are served
     if (!/^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(req.headers.host ?? "")) return send(403, "forbidden host");
+    // the daemon owns `/` and `/api/*`; a route can never shadow them
+    if (opts.daemon && (await opts.daemon.handle(req, res))) return;
     const url = new URL(req.url ?? "/", "http://x");
     if (url.pathname === "/health") return send(200, "ok");
     const name = decodeURIComponent(url.pathname.replace(/^\/+|\/+$/g, ""));
@@ -80,6 +83,7 @@ export function startHttpProxy(rt: Runtime, opts: { port: number; routesFile?: s
 
     const sid = (req.headers["mcp-session-id"] as string | undefined) ?? "";
     const session = sessions.get(sid) ?? rt.newSession(name);
+    opts.daemon?.registry.register({ id: `http-${name}-${sid.slice(0, 12) || "anon"}`, kind: "http", server: name, client: req.headers["user-agent"]?.slice(0, 80) });
     const headers = forwardHeaders(req);
     const abort = new AbortController();
     let body: string | undefined;

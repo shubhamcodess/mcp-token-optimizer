@@ -18,8 +18,13 @@ export interface AuditRow {
 
 /** Append-only JSONL audit log. Never records tool content, only sizes and decisions. */
 export class Audit {
+  private listeners: Array<(row: AuditRow) => void> = [];
   constructor(private cfg: Config["audit"]) {
     if (cfg.enabled) mkdirSync(dirname(cfg.path), { recursive: true });
+  }
+  /** Subscribe to rows as they are written (the daemon's live feed). Listeners must never throw into the caller. */
+  onWrite(fn: (row: AuditRow) => void): void {
+    this.listeners.push(fn);
   }
   write(row: AuditRow): void {
     if (!this.cfg.enabled) return;
@@ -27,6 +32,13 @@ export class Audit {
       appendFileSync(this.cfg.path, JSON.stringify(row) + "\n");
     } catch {
       /* auditing must never break the agent */
+    }
+    for (const fn of this.listeners) {
+      try {
+        fn(row);
+      } catch {
+        /* same */
+      }
     }
   }
 }

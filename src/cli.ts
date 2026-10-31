@@ -9,30 +9,21 @@ import { defaultConfig, HOME_DIR, loadConfig } from "./config.js";
 import { formatBench, runBench } from "./bench.js";
 import { formatCompare } from "./compare.js";
 import { CAPTURE_DIR, captureEnabled, readCaptures, setCapture } from "./capture.js";
+import { configPath, formatValue, getConfigValue, setConfigValue } from "./configEdit.js";
+import { REPO_URL, commandHelp, docsHelp, helpFor, suggest } from "./help.js";
+import { Daemon, packageVersion, readDaemon, removeDaemon, summarize, writeDaemon } from "./daemon.js";
+import { callDaemon, ensureDaemon } from "./daemonClient.js";
 import { startHttpProxy } from "./http.js";
 import { DEFAULT_PORT, ROUTES_FILE, loadRoutes } from "./routes.js";
 import { agentTargets, discover, parseTargetSpec, planOrApply, scanForConfigs, expandPath, type AgentTarget } from "./installer.js";
-import { ollamaHealth } from "./llm.js";
+import { ollamaHealth, ollamaModels, pullModel, testModel, validModelName } from "./llm.js";
 import { createRuntime } from "./runtime.js";
 import { runStdioWrapper } from "./stdio.js";
 
-const HELP = `mto - MCP Token Optimizer
-
-Usage:
-  mto discover [--scan dir] [--file path[#keyPath]] [--no-builtin]  List every MCP config + server found (read-only)
-  mto init [--apply] [--only a,b] [--file f] [--scan d] [--skip agent] [--no-builtin]   Wrap every stdio MCP server found in your agents' configs
-  mto uninstall [--apply]                           Restore the original server commands
-  mto wrap [--name n] [--config f] -- <cmd> [args]  Run one MCP server through the optimizer (what init installs)
-  mto try <file|-> [--tool name] [--server name]    Optimize a saved tool response and show before/after
-  mto serve [--port 8787] [--config f]              Run the local HTTP proxy that init points remote (URL) MCP servers at
-  mto capture on|off|status                         Record raw (secret-redacted) tool results locally, live, no restart
-  mto bench [dir] [--llm] [--models a,b] [--dump f] Replay captures: savings, latency, fact retention (per model with --models)
-  mto compare [--tool glob] [--last N]              Original vs what the agent received (needs capture + active mode)
-  mto stats [--since 7d] [--json]                   Token savings report from the audit log
-  mto doctor [--config f]                           Check config, Ollama and model availability
-  mto config init                                   Write a commented default config to ${join(HOME_DIR, "config.yaml")}
-
-init/uninstall are dry-runs unless --apply is given. Configs are backed up as <file>.mto.bak.`;
+function openUrl(url: string): void {
+  const [bin, args] = process.platform === "darwin" ? ["open", [url]] : process.platform === "win32" ? ["cmd", ["/c", "start", "", url]] : ["xdg-open", [url]];
+  spawn(bin as string, args as string[], { stdio: "ignore", detached: true }).on("error", () => console.error(`[mto] could not open a browser; visit ${url}`)).unref();
+}
 
 function flagAll(args: string[], name: string): string[] {
   return args.flatMap((a, i) => (a === name && args[i + 1] ? [args[i + 1]] : []));
@@ -66,6 +57,12 @@ function flag(args: string[], name: string): string | undefined {
 async function main(): Promise<number> {
   const [cmd, ...rest] = process.argv.slice(2);
   const cliPath = fileURLToPath(import.meta.url);
+  if (cmd && cmd !== "wrap" && (rest.includes("--help") || rest.includes("-h"))) {
+    const h = commandHelp(cmd);
+    if (h) return (console.log(h), 0);
+  }
+  if (cmd === "--help" || cmd === "-h") return (console.log(helpFor().text), 0);
+  if (cmd === "-v") return (console.log(packageVersion()), 0);
 
   switch (cmd) {
     case "wrap": {
@@ -137,14 +134,53 @@ async function main(): Promise<number> {
     }
 
     case "serve": {
+      const existing = readDaemon();
+      if (existing) return (console.error(`[mto] already running (pid ${existing.pid}) at http://127.0.0.1:${existing.port}/`), 1);
       const rt = createRuntime(flag(rest, "--config"));
-      const port = Number(flag(rest, "--port") ?? DEFAULT_PORT);
+      const port = Number(flag(rest, "--port") ?? rt.config.ui.port ?? DEFAULT_PORT);
       void rt.warm();
-      const srv = await startHttpProxy(rt, { port });
+      let srv: Awaited<ReturnType<typeof startHttpProxy>>;
+      const daemon = new Daemon(rt, { onShutdown: () => srv.close() });
+      srv = await startHttpProxy(rt, { port, daemon });
+      daemon.port = (srv.address() as { port: number }).port;
+      writeDaemon(daemon.info());
+      const cleanup = () => removeDaemon(daemon.token);
+      process.on("exit", cleanup);
+      for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"] as const) process.on(sig, () => (cleanup(), srv.close(), process.exit(0)));
       const routes = Object.entries(loadRoutes());
-      console.error(`[mto] http proxy on http://127.0.0.1:${port}  (${routes.length} route(s) from ${ROUTES_FILE})`);
+      console.error(`[mto] http proxy on http://127.0.0.1:${daemon.port}  (${routes.length} route(s) from ${ROUTES_FILE})`);
+      console.error(`[mto] dashboard: http://127.0.0.1:${daemon.port}/   (open it with \`mto ui\`)`);
       for (const [n, r] of routes) console.error(`  /${n} -> ${new URL(r.url).origin}${new URL(r.url).pathname}`);
       return new Promise<number>((resolve) => srv.on("close", () => resolve(0)));
+    }
+
+    case "status": {
+      const d = readDaemon();
+      const live = d ? await callDaemon(d, "GET", "/api/status") : undefined;
+      if (live) {
+        const st = await callDaemon(d!, "GET", "/api/stats?since=24h");
+        console.log(`daemon: UP  pid ${live.pid}  http://127.0.0.1:${live.port}/  uptime ${live.uptimeSec}s  v${live.version}`);
+        console.log(`mode=${live.mode} profile=${live.profile} routes=${live.routes}`);
+        console.log(live.proxies.length ? `connected (${live.proxies.length}):` : "connected: none");
+        for (const p of live.proxies) console.log(`  ${p.kind.padEnd(5)} ${p.server.padEnd(20)} ${p.client ?? "-"}  ${p.calls} call(s)  pid ${p.pid ?? "-"}`);
+        if (st) console.log(`last 24h: ${st.calls} calls, ${st.tokensIn} -> ${st.tokensOut} tokens (${st.savedPct}% saved)`);
+        return 0;
+      }
+      const { config } = createRuntime(flag(rest, "--config"));
+      const st = summarize(readAudit(config.audit.path, Date.now() - 8.64e7));
+      console.log("daemon: DOWN  (start it with `mto serve` or `mto ui`)");
+      console.log(`last 24h (from the audit log): ${st.calls} calls, ${st.tokensIn} -> ${st.tokensOut} tokens (${st.savedPct}% saved)`);
+      return 1;
+    }
+
+    case "ui": {
+      const { config } = createRuntime(flag(rest, "--config"));
+      const d = await ensureDaemon(config, { force: true });
+      if (!d) return (console.error("[mto] could not start the daemon; run `mto serve` to see why"), 1);
+      const url = `http://127.0.0.1:${d.port}/`;
+      console.log(url);
+      if (!rest.includes("--no-open")) openUrl(url);
+      return 0;
     }
 
     case "capture": {
@@ -209,22 +245,122 @@ async function main(): Promise<number> {
     }
 
     case "config": {
-      if (rest[0] !== "init") return (console.log(HELP), 2);
-      const p = join(HOME_DIR, "config.yaml");
-      if (existsSync(p)) return (console.error(`${p} already exists`), 1);
-      mkdirSync(dirname(p), { recursive: true });
-      writeFileSync(p, `# mcp-token-optimizer config. Every key is optional; shown values are the defaults.\n# See README for per-tool overrides under \`tools:\`.\n${yamlStringify(defaultConfig())}`);
-      console.log(`wrote ${p}`);
+      const sub = rest[0];
+      const explicit = flag(rest, "--config");
+      if (sub === "init") {
+        const p = join(HOME_DIR, "config.yaml");
+        if (existsSync(p)) return (console.error(`${p} already exists`), 1);
+        mkdirSync(dirname(p), { recursive: true });
+        writeFileSync(p, `# mcp-token-optimizer config. Every key is optional; shown values are the defaults.\n# See README for per-tool overrides under \`tools:\`.\n${yamlStringify(defaultConfig())}`);
+        console.log(`wrote ${p}`);
+        return 0;
+      }
+      if (sub === "path") return (console.log(configPath(explicit)), 0);
+      if (sub === "get") {
+        const key = rest[1] && !rest[1].startsWith("--") ? rest[1] : undefined;
+        const v = getConfigValue(loadConfig(explicit).config, key);
+        if (v === undefined) return (console.error(`unknown config key "${key}"`), 1);
+        console.log(formatValue(v));
+        return 0;
+      }
+      if (sub === "set") {
+        if (rest.length < 3) return (console.error("usage: mto config set <key> <value>"), 2);
+        const r = setConfigValue(configPath(explicit), rest[1], rest[2]);
+        if (!r.ok) return (console.error(`[mto] ${r.error}`), 1);
+        console.log(`${rest[1]} = ${formatValue(r.value)}   (${r.path})${readDaemon() ? "\nrestart `mto serve` for the daemon to pick it up" : ""}`);
+        return 0;
+      }
+      if (sub === "edit") {
+        const p = configPath(explicit);
+        if (!existsSync(p)) return (console.error(`${p} does not exist yet; run \`mto config init\``), 1);
+        const editor = process.env.VISUAL || process.env.EDITOR || (process.platform === "win32" ? "notepad" : "vi");
+        return new Promise<number>((resolve) => spawn(editor, [p], { stdio: "inherit", shell: true }).on("close", (c) => resolve(c ?? 0)));
+      }
+      console.error(commandHelp("config"));
+      return 2;
+    }
+
+    case "models": {
+      const { config, configPath: cfgFile } = createRuntime(flag(rest, "--config"));
+      const sub = rest[0] && !rest[0].startsWith("--") ? rest[0] : "list";
+      const name = rest[1] && !rest[1].startsWith("--") ? rest[1] : undefined;
+      if (sub === "list") {
+        const m = await ollamaModels(config.llm);
+        if (!m.ok) return (console.error(`✗ ollama unreachable at ${config.llm.baseUrl} (${m.error})`), 1);
+        const gb = (b: number) => (b ? `${(b / 1e9).toFixed(1)} GB` : "-");
+        for (const x of m.models) console.log(`${x.name === config.llm.model || x.name === `${config.llm.model}:latest` ? "*" : " "} ${x.name.padEnd(28)} ${gb(x.sizeBytes).padEnd(8)} ${[x.family, x.parameterSize, x.quantization].filter(Boolean).join(" ")}`);
+        if (!m.models.some((x) => x.name === config.llm.model || x.name === `${config.llm.model}:latest`)) console.log(`\nactive model "${config.llm.model}" is not pulled: mto models pull ${config.llm.model}`);
+        return 0;
+      }
+      if (sub === "use") {
+        if (!validModelName(name)) return (console.error("usage: mto models use <name>"), 2);
+        const d = readDaemon();
+        const live = d ? await callDaemon(d, "POST", "/api/models/select", { model: name }) : undefined;
+        if (!live) {
+          const r = setConfigValue(configPath(cfgFile), "llm.model", name);
+          if (!r.ok) return (console.error(`[mto] ${r.error}`), 1);
+        }
+        const m = await ollamaModels(config.llm);
+        console.log(`llm.model = ${name}${live ? " (daemon updated live)" : ""}`);
+        if (m.ok && !m.models.some((x) => x.name === name || x.name === `${name}:latest`)) console.log(`not pulled yet: mto models pull ${name}`);
+        return 0;
+      }
+      if (sub === "test") {
+        const model = name ?? config.llm.model;
+        if (!validModelName(model)) return (console.error("invalid model name"), 2);
+        console.log(`testing ${model} ...`);
+        const r = await testModel(config.llm, model);
+        if (!r.ok) return (console.error(`✗ ${r.error}`), 1);
+        console.log(`${r.factsKept}/${r.factsTotal} key facts kept · ${((r.latencyMs ?? 0) / 1000).toFixed(1)}s${r.tokensPerSec ? ` · ${r.tokensPerSec} tok/s` : ""}${r.truncated ? " · TRUNCATED" : ""}\n${r.summary}`);
+        return r.factsKept === r.factsTotal ? 0 : 1;
+      }
+      if (sub === "pull") {
+        if (!validModelName(name)) return (console.error("usage: mto models pull <name>"), 2);
+        let last = "";
+        const r = await pullModel(config.llm, name, (p) => {
+          const line = p.total && p.completed ? `${p.status} ${Math.round((p.completed / p.total) * 100)}%` : p.status;
+          if (line !== last && process.stderr.isTTY) process.stderr.write(`\r${line.padEnd(60)}`);
+          last = line;
+        });
+        process.stderr.write("\n");
+        if (!r.ok) return (console.error(`✗ pull failed: ${r.error}`), 1);
+        console.log(`pulled ${name}. Use it: mto models use ${name}`);
+        return 0;
+      }
+      console.error(commandHelp("models"));
+      return 2;
+    }
+
+    case "about": {
+      const d = readDaemon();
+      console.log(`mcp-token-optimizer ${packageVersion()}\nLossless-first MCP tool-response compression. Local only: no telemetry, no cloud models.\nlicense:  Apache-2.0\nrepo:     ${REPO_URL}\ndata dir: ${HOME_DIR}\nnode:     ${process.version}\ndaemon:   ${d ? `up on http://127.0.0.1:${d.port}/ (pid ${d.pid})` : "not running"}`);
       return 0;
+    }
+
+    case "docs": {
+      const section = rest.find((a) => !a.startsWith("--"));
+      const r = docsHelp(section);
+      console.log(r.text);
+      if (r.url && rest.includes("--open")) openUrl(r.url);
+      return r.code;
+    }
+
+    case "help": {
+      const r = helpFor(rest[0]);
+      (r.code ? console.error : console.log)(r.text);
+      return r.code;
     }
 
     case "--version":
       console.log(JSON.parse(readFileSync(join(dirname(cliPath), "..", "package.json"), "utf8")).version);
       return 0;
 
-    default:
-      console.log(HELP);
-      return cmd && cmd !== "help" && cmd !== "--help" ? 2 : 0;
+    default: {
+      if (!cmd) return (console.log(helpFor().text), 0);
+      const near = suggest(cmd);
+      console.error(`mto: unknown command "${cmd}".${near ? ` Did you mean "${near}"?` : ""} Run \`mto help\` for the list.`);
+      return 2;
+    }
   }
 }
 

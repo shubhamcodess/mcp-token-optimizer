@@ -5,6 +5,9 @@ All notable changes to this project are documented here. The format is based on 
 ## [Unreleased]
 
 ### Added
+- **Local daemon** (`mto serve`): authenticated API under `/api/*` (status, stats, config, live event feed, models) with a per-run token, Host/Origin checks, no CORS and no command execution; process registry of connected proxies; wrappers auto-start it (`ui.autoStart`, `MTO_NO_DAEMON=1`); `mto status` and `mto ui`. (#11, #12, #13, #21)
+- **CLI help system:** `mto help [command|topic]`, `<command> --help`, did-you-mean for typos, `mto docs`, `mto about`, and `mto config path|get|set|edit` with schema validation and comment-preserving writes. (#17, #18, #20)
+- **Models:** `mto models` (list, `use`, `test`, `pull`) and matching daemon endpoints; selecting a model that is not pulled yet is allowed. (#31, #32)
 - GitHub Actions: docs link check, installable-package check and a single `CI gate` job in CI; CodeQL, gitleaks secret scan, dependency review, stale-issue handling, manual npm publish; Dependabot for npm and Actions.
 
 ## [0.1.0]

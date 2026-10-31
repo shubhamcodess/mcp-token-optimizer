@@ -131,6 +131,13 @@ export const ConfigSchema = z
         pricePerMTokUsd: z.number().default(3),
       })
       .default({}),
+    /** The local daemon (dashboard API). Wrappers start it when it is not running; it never opens a browser by itself. */
+    ui: z
+      .object({
+        autoStart: z.boolean().default(true),
+        port: z.number().int().min(1).max(65535).default(8787),
+      })
+      .default({}),
     /** Per `server.tool` glob overrides. First match wins. */
     tools: z.record(ToolRule).default({}),
   })
