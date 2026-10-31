@@ -120,7 +120,7 @@ git clone https://github.com/shubhamcodess/mcp-token-optimizer.git
 cd mcp-token-optimizer
 npm install
 npm run build
-node dist/cli.js --version                     # prints 0.1.0
+node dist/cli.js --version                     # prints 0.2.0
 ```
 
 **B. Install a prebuilt release tarball** (no clone, no build step)
@@ -128,7 +128,7 @@ node dist/cli.js --version                     # prints 0.1.0
 Download `mcp-token-optimizer-<version>.tgz` from the repository's **Releases** page (each tagged release attaches one, built by CI), then:
 
 ```bash
-npm install -g ./mcp-token-optimizer-0.1.0.tgz
+npm install -g ./mcp-token-optimizer-0.2.0.tgz
 mto --version
 ```
 

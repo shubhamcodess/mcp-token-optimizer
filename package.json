@@ -1,6 +1,6 @@
 {
   "name": "mcp-token-optimizer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Self-hosted proxy between AI agents and MCP servers that shrinks tool responses (prune, TOON, local-LLM summarization) without hurting agent quality.",
   "keywords": [
     "mcp",

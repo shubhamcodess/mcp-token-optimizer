@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-31
+
+A local dashboard, a proper daemon, self-aware agent integration and an eval gate. Local only, as before: nothing leaves the machine except traffic to your own MCP servers and a local Ollama.
+
 ### Changed
 - Token counts are labelled as estimates in `stats`, `bench`, `compare`, `eval` and `status` output; `.claude/` is git-ignored; `mto config edit` quotes the file path; the auto-started daemon hides its console window on Windows. (#45)
 
