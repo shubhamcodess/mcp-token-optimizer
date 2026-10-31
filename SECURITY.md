@@ -44,3 +44,44 @@ The package is published from GitHub Actions only, with a provenance attestation
 ## Handling secrets when contributing or reporting
 
 Never paste real API keys, tokens, or captured tool output into issues, pull requests, or logs. If you accidentally did, rotate the credential immediately, then tell us so the content can be removed. Test fixtures must build token-shaped strings from fragments so the repository never contains a live-looking secret literal.
+
+## 10. Secret detection and redaction
+
+> Find (or strip) API keys, tokens and private keys in tool output before the model sees them.
+
+Built-in patterns: AWS access keys, GitHub tokens (classic and fine-grained), Slack tokens, Anthropic/OpenAI/Google API keys, JWTs, PEM private keys, `Bearer` tokens. Add your own with `redaction.extraPatterns`.
+
+| `redaction.mode` | Behaviour |
+|---|---|
+| `off` | no scanning |
+| `detect` *(default)* | text untouched; findings counted in the audit log; `mto stats` prints `Secrets seen in tool output: aws-access-key×1, …` |
+| `redact` | secrets replaced with `[REDACTED:type]` **before** the agent (and its provider) sees them |
+
+```yaml
+redaction:
+  mode: redact
+  extraPatterns:
+    - { name: internal-token, regex: "itk_[A-Za-z0-9]{24,}" }
+```
+
+```bash
+printf 'redaction:\n  mode: redact\nsummarize:\n  enabled: false\n' > /tmp/r.yaml
+node dist/cli.js try examples/secrets.txt --config /tmp/r.yaml 2>/dev/null | head -4
+# aws_access_key_id = [REDACTED:aws-access-key]
+# github_token = [REDACTED:github-token]  …
+```
+
+In `redact` mode redaction is never undone, even by the never-bigger fallback. (Pattern-based: it will not catch every possible secret.)
+
+## 16. Security and privacy
+
+> What is stored, what is forwarded, and what is never done.
+
+* **Local only.** The proxy binds to `127.0.0.1`; only `Host: 127.0.0.1|localhost|[::1]` is accepted; only routes in `routes.json` are forwarded (no open proxy).
+* **Credentials pass through, never stored.** HTTP headers (API keys, `Authorization`) are forwarded to the configured upstream and are not logged, audited, or written to disk. **Do not paste keys into screenshots or chat; the demo config uses fake values.**
+* **The daemon API is locked down.** `/api/*` requires a per-run bearer token, accepts only loopback `Host` and same-origin `Origin` headers, sends no CORS headers, and offers no way to run arbitrary commands: only fixed, named actions (for example select, test or pull a model by name). Live-feed rows hold sizes only.
+* **The audit log holds sizes only.** `stats.jsonl` never contains tool content.
+* **Stored originals** (`store/`) and **captures** hold real tool output, with `0600` files in a `0700` directory; captures are secret-redacted (pattern-based). Retention: `retrieval.ttlMinutes`; captures until you delete them.
+* **TLS is never disabled.** A private CA is trusted via the OS store (`--use-system-ca`) or `NODE_EXTRA_CA_CERTS`.
+* `init --apply` edits agent config files in place after writing a `.mto.bak`; `uninstall --apply` reverses it.
+* The summarization prompt treats tool output as data. A tool result that contains instructions is summarized, not obeyed. (Summarizers can still be nudged by adversarial text; keep `summarize.neverTools` for sensitive tools.)
