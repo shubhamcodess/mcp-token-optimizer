@@ -69,8 +69,9 @@ jobs:
       - name: The tarball ships the dashboard and an installed copy serves it
         run: |
           set -euo pipefail
-          tar -tzf mcp-token-optimizer-*.tgz | grep -q 'package/dist/ui/index.html'
-          tar -tzf mcp-token-optimizer-*.tgz | grep -q 'package/dist/ui/assets/'
+          LIST="$(tar -tzf mcp-token-optimizer-*.tgz)"
+          grep -q 'package/dist/ui/index.html' <<< "$LIST"
+          grep -q 'package/dist/ui/assets/' <<< "$LIST"
           P="$(mktemp -d)"
           npm install -g --prefix "$P" ./mcp-token-optimizer-*.tgz
           export MTO_HOME="$P/home" MTO_NO_DAEMON=1
