@@ -111,7 +111,7 @@ ollama --version        # optional but recommended
 
 ### 1.2 Install
 
-Pick one. All give you the same `mto` CLI. (npm: from 0.2.1.)
+Pick one. All give you the same `mto` CLI.
 
 **A. Clone and build** (contributors, or if you always want the latest)
 
@@ -123,7 +123,7 @@ npm run build
 node dist/cli.js --version                     # prints 0.2.0
 ```
 
-**B. Install from npm** (from 0.2.1: no clone, no build step)
+**B. Install from npm** (no clone, no build step; recommended)
 
 ```bash
 npm install -g @shubhamcodess/mcp-token-optimizer
