@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { AUTHOR, BENCHMARKS, DOWNLOAD_LATEST, GITHUB_USER, INSTALL_LATEST, LINKEDIN, REPO, fmt } from './data'
+import { AUTHOR, BENCHMARKS, DOWNLOAD_LATEST, GITHUB_USER, INSTALL_LATEST, LINKEDIN, REPO, VERSION, fmt } from './data'
 import { animateNumber, usePrefersReducedMotion, useSeen } from './hooks'
 import {
   IconArrow,
@@ -314,7 +314,7 @@ const INSTALL_TABS: TermTab[] = [
       { k: 'cmd', t: DOWNLOAD_LATEST },
       { k: 'cmd', t: INSTALL_LATEST },
       { k: 'cmd', t: 'mto --version' },
-      { k: 'out', t: '0.1.0' },
+      { k: 'out', t: VERSION },
       { k: 'gap' },
       { k: 'cmd', t: 'npm install -g @shubhamcodess/mcp-token-optimizer' },
     ],
@@ -370,7 +370,7 @@ const INSTALL_TABS: TermTab[] = [
       { k: 'cmd', t: `git clone ${REPO}.git && cd mcp-token-optimizer` },
       { k: 'cmd', t: 'npm install && npm run build' },
       { k: 'cmd', t: 'node dist/cli.js --version' },
-      { k: 'out', t: '0.1.0' },
+      { k: 'out', t: VERSION },
     ],
   },
 ]
@@ -648,7 +648,7 @@ export function Maker() {
             <div>
               <dt>latest release</dt>
               <dd>
-                <a href={`${REPO}/releases/latest`}>v0.1.0</a> · Sep 21, 2026
+                <a href={`${REPO}/releases/latest`}>v{VERSION}</a> · Oct 31, 2026
               </dd>
             </div>
             <div>

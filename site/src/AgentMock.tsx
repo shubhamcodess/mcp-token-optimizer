@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { IconCheck, IconPause, IconPlay, IconReplay } from './Icons'
 import { usePrefersReducedMotion } from './hooks'
+import { VERSION } from './data'
 
 // Real sample: the first issue of examples/github-issues.json (synthetic acme/widgets data).
 const RAW: { t: string; noise?: boolean }[] = [
@@ -248,7 +249,7 @@ export function AgentMock() {
                 <span>filesystem</span>
               </p>
             </div>
-            <p className="side__foot">mto 0.1.0 · 127.0.0.1</p>
+            <p className="side__foot">mto {VERSION} · 127.0.0.1</p>
           </aside>
 
           <div className="app__chat">

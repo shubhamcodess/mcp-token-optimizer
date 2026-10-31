@@ -540,13 +540,6 @@ h1 .cut::after {
   color: var(--text-3);
   user-select: none;
 }
-.cmd__soon {
-  flex: none;
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  color: var(--text-3);
-  padding: 0 6px;
-}
 .copy {
   flex: none;
   display: inline-flex;

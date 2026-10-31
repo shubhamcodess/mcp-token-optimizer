@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⚡ mcp-token-optimizer
+<img src="docs/logo.svg" alt="" width="64" height="64">
+
+# mcp-token-optimizer
 
 ### Stop paying for tool-response noise.
 

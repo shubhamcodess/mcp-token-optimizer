@@ -4,11 +4,11 @@ import { CopyButton } from './Chrome'
 import { INSTALL_NPM, INSTALL_ONE_LINER, LATEST_URL, REPO, VERSION } from './data'
 import { IconDownload, IconGithub } from './Icons'
 
-const TABS = ['release', 'npm'] as const
+const TABS = ['npm', 'release'] as const
 type Tab = (typeof TABS)[number]
 
 export function Hero() {
-  const [tab, setTab] = useState<Tab>('release')
+  const [tab, setTab] = useState<Tab>('npm')
 
   function onKey(e: KeyboardEvent<HTMLDivElement>) {
     const i = TABS.indexOf(tab)
@@ -67,11 +67,7 @@ export function Hero() {
                 <span className="p">$ </span>
                 {tab === 'release' ? INSTALL_ONE_LINER : INSTALL_NPM}
               </code>
-              {tab === 'release' ? (
-                <CopyButton text={INSTALL_ONE_LINER} />
-              ) : (
-                <span className="cmd__soon">coming in v3</span>
-              )}
+              <CopyButton text={tab === 'release' ? INSTALL_ONE_LINER : INSTALL_NPM} />
             </div>
           </div>
           <div className="hero__btns">
