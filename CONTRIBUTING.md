@@ -200,3 +200,29 @@ Good places to start (open an issue to claim one):
 - **Docs:** walkthrough videos or GIFs, translations, per-agent guides.
 
 Questions? Open an issue titled `question: …`. We would rather answer it publicly so the next person benefits.
+
+## Code layout and checks
+
+Where the code lives and how to run the checks before you open a pull request.
+
+```
+src/
+  cli.ts          command line             installer.ts  discovery + config-file editing (jsonc-parser)
+  config.ts       schema + loader           stdio.ts      stdio wrapper
+  pipeline.ts     the optimization pipeline  http.ts       HTTP/SSE proxy
+  prune.ts        prune + cross-field dedupe session.ts    JSON-RPC interceptor, mto_expand, notes
+  toon.ts         official TOON wrapper      summarize.ts  chunked LLM summarization + guards
+  text.ts         cleanup, HTML, code sniff  llm.ts        Ollama client, circuit breaker
+  redact.ts       secret patterns            store.ts      originals for mto_expand
+  audit.ts        stats log/report           capture.ts / bench.ts / compare.ts   tuning loop
+  daemon.ts       authenticated local API    registry.ts / daemonClient.ts   connected proxies, auto-start
+  help.ts         CLI help + did-you-mean    configEdit.ts   `config get|set` (shared with the API)
+examples/  synthetic sample data + fake MCP server      scripts/  mcp-call.mjs, smoke.mjs, make-examples.mjs
+deploy/    launchd + systemd templates                  tests/    89 tests (node:test)
+```
+
+```bash
+npm test             # 89 tests: TOON fuzz, pipeline guardrails, installer/JSONC, HTTP proxy, stdio e2e, expand
+npm run typecheck
+npm run smoke        # 24 end-to-end assertions with the fake server
+```

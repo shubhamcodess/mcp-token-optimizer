@@ -525,3 +525,21 @@ node dist/cli.js capture off
 rm -rf ~/.mcp-token-optimizer/captures                          # recorded tool output
 node dist/cli.js uninstall --apply                              # only if you want the agent configs restored
 ```
+
+## 17. Known limitations and verification status
+
+> What was verified live, what was only unit-tested, and what is not covered.
+
+**Verified** (automated tests + live runs on macOS, Node 22.16, Ollama, VS Code Copilot agent mode against a real remote HTTP MCP server): stdio wrapper, HTTP proxy (JSON + SSE, corporate CA), JSONC config editing, TOON round-trip (1,500-document fuzz), all modes/profiles/formats in this README, `mto_expand`, fail-open with Ollama down, live summarization with five local models, and a clean A/B run whose output files were **byte-identical** to the ground-truth data.
+
+**Not verified by the author:** Claude Code, Claude Desktop, Cursor, Windsurf, Cline, Roo, Gemini CLI against live sessions (config handling is unit-tested); Linux and Windows; the systemd unit; JSON-RPC batch handling beyond pass-through.
+
+**Limitations**
+
+* Token counts are a model-agnostic **estimate**, good for relative savings, not billing-exact.
+* Long strings *inside* JSON fields (e.g. an issue `body`) are not summarized.
+* Legacy `"type":"sse"` MCP servers are not proxied.
+* `mto serve` must be running for proxied HTTP servers (no auto-start beyond the launchd/systemd templates).
+* Summarization latency is bounded but real (seconds); benefit is modest on prose that is already dense.
+* If an agent post-processes saved tool results with scripts, use `json-pretty` for large results ([section 7](docs/tuning.md#7-output-formats-json-vs-toon)).
+* The output-format savings and model comparisons were measured on one machine and a few datasets; benchmark yours (TESTING.md).
