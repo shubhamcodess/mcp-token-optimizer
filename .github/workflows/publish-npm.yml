@@ -1,23 +1,42 @@
 name: Publish to npm
 
-# MANUAL ONLY. Run from the Actions tab once you are ready to publish to the npm registry.
-# One-time setup: create an npm automation token and save it as the repository secret NPM_TOKEN.
-# The package name must be free on npm (check with: npm view mcp-token-optimizer).
+# Publishes the package to the npm registry with provenance.
+#  - Push a version tag (v0.2.1): runs every check, then publishes if the NPM_TOKEN repository secret exists.
+#    Without the secret it logs a notice and stops after the checks (the GitHub release is not affected).
+#  - Run it by hand from the Actions tab: a dry run by default. A real publish from here must be started from a tag.
+# One-time setup: create a granular npm access token (read and write for the package or scope, "bypass 2FA"
+# enabled) and save it as the repository secret NPM_TOKEN. Details: CONTRIBUTING.md, "Releases".
 on:
+  push:
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Dry run (do not actually publish)"
+        description: "Dry run (run every check and `npm publish --dry-run`, publish nothing)"
         type: boolean
         default: true
 
 permissions:
   contents: read
-  id-token: write # npm provenance
+
+concurrency:
+  group: publish-npm-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
+    name: Check and publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    env:
+      HAS_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    outputs:
+      name: ${{ steps.meta.outputs.name }}
+      version: ${{ steps.meta.outputs.version }}
+      published: ${{ steps.publish.outputs.published }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,15 +45,65 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
+      - name: Package name and version
+        id: meta
+        run: |
+          echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Tag must match package.json version
+        if: github.ref_type == 'tag'
+        run: |
+          v="v${{ steps.meta.outputs.version }}"
+          if [ "$v" != "$GITHUB_REF_NAME" ]; then echo "::error::tag $GITHUB_REF_NAME != package.json $v"; exit 1; fi
+      - name: The name must be scoped (the unscoped name belongs to another project)
+        run: |
+          case "${{ steps.meta.outputs.name }}" in @*/*) ;; *) echo "::error::package name is not scoped"; exit 1;; esac
       - run: npm run typecheck
       - run: npm test
       - run: npm run smoke
-      - name: Publish (or dry run)
+      - name: Regression suite
+        run: npm run eval
+      - run: npm run ui:budget
+      - name: Package contents
+        run: npm run pack:check
+      - name: Dry run
+        if: env.DRY_RUN == 'true'
+        run: npm publish --dry-run --provenance --access public
+      - name: Publish
+        id: publish
+        if: env.DRY_RUN != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
-            npm publish --dry-run --provenance --access public
-          else
-            npm publish --provenance --access public
+          set -euo pipefail
+          echo "published=false" >> "$GITHUB_OUTPUT"
+          NAME="${{ steps.meta.outputs.name }}"; VERSION="${{ steps.meta.outputs.version }}"
+          if [ "$HAS_TOKEN" != "true" ]; then
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then echo "::error::NPM_TOKEN is not set (Settings, Secrets and variables, Actions)"; exit 1; fi
+            echo "::notice::NPM_TOKEN is not set: checks passed, nothing published. Add the secret, then re-run this workflow on the tag."
+            exit 0
           fi
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then echo "::error::a real publish must run from a version tag, not $GITHUB_REF"; exit 1; fi
+          if [ "$(npm view "$NAME@$VERSION" version 2>/dev/null || true)" = "$VERSION" ]; then
+            echo "::notice::$NAME@$VERSION is already on the registry: nothing to publish"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          DIST_TAG=latest; case "$VERSION" in *-*) DIST_TAG=next;; esac
+          npm publish --provenance --access public --tag "$DIST_TAG"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify the registry install
+    needs: publish
+    if: needs.publish.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install from the registry and run it
+        env:
+          VERIFY_PROVENANCE: "1"
+        run: bash scripts/verify-registry.sh "${{ needs.publish.outputs.name }}" "${{ needs.publish.outputs.version }}"

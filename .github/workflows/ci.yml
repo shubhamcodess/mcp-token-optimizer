@@ -57,23 +57,27 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build
+      - run: npm run examples
+      - name: Package contents (required files, nothing forbidden, size budget, scoped name)
+        run: npm run pack:check
       - name: Build the release tarball (same as the Release workflow)
         run: npm pack
       - name: Install the tarball into an empty prefix and run it
         run: |
           set -euo pipefail
           P="$(mktemp -d)"
-          npm install -g --prefix "$P" ./mcp-token-optimizer-*.tgz
+          npm install -g --prefix "$P" ./shubhamcodess-mcp-token-optimizer-*.tgz
           "$P/bin/mto" --version
-          MTO_HOME="$P/home" "$P/bin/mto" try "$P/lib/node_modules/mcp-token-optimizer/examples/github-issues.json" 2>&1 >/dev/null | tee /dev/stderr | grep -q "saved"
+          MTO_HOME="$P/home" "$P/bin/mto" try "$P/lib/node_modules/@shubhamcodess/mcp-token-optimizer/examples/github-issues.json" 2>&1 >/dev/null | tee /dev/stderr | grep -q "saved"
       - name: The tarball ships the dashboard and an installed copy serves it
         run: |
           set -euo pipefail
-          LIST="$(tar -tzf mcp-token-optimizer-*.tgz)"
+          LIST="$(tar -tzf shubhamcodess-mcp-token-optimizer-*.tgz)"
           grep -q 'package/dist/ui/index.html' <<< "$LIST"
           grep -q 'package/dist/ui/assets/' <<< "$LIST"
           P="$(mktemp -d)"
-          npm install -g --prefix "$P" ./mcp-token-optimizer-*.tgz
+          npm install -g --prefix "$P" ./shubhamcodess-mcp-token-optimizer-*.tgz
           export MTO_HOME="$P/home" MTO_NO_DAEMON=1
           "$P/bin/mto" serve --port 18787 > "$P/serve.log" 2>&1 &
           PID=$!

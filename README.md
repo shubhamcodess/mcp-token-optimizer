@@ -111,7 +111,7 @@ ollama --version        # optional but recommended
 
 ### 1.2 Install
 
-Pick one. All give you the same `mto` CLI.
+Pick one. All give you the same `mto` CLI. (npm: from 0.2.1.)
 
 **A. Clone and build** (contributors, or if you always want the latest)
 
@@ -123,20 +123,30 @@ npm run build
 node dist/cli.js --version                     # prints 0.2.0
 ```
 
-**B. Install a prebuilt release tarball** (no clone, no build step)
-
-Download `mcp-token-optimizer-<version>.tgz` from the repository's **Releases** page (each tagged release attaches one, built by CI), then:
+**B. Install from npm** (from 0.2.1: no clone, no build step)
 
 ```bash
-npm install -g ./mcp-token-optimizer-0.2.0.tgz
+npm install -g @shubhamcodess/mcp-token-optimizer
+mto --version
+mto ui
+```
+
+The package is scoped because the unscoped name `mcp-token-optimizer` belongs to a different, unrelated project on npm; make sure you install the scoped one. The commands it installs are `mto` and `mcp-token-optimizer`. Releases are published from CI with a [provenance attestation](https://docs.npmjs.com/generating-provenance-statements).
+
+**C. Install a prebuilt release tarball** (no clone, no build step)
+
+Download the `.tgz` (`shubhamcodess-mcp-token-optimizer-<version>.tgz`; the 0.2.0 file is named `mcp-token-optimizer-0.2.0.tgz`) from the repository's **Releases** page (each tagged release attaches one, built by CI), then:
+
+```bash
+npm install -g ./*mcp-token-optimizer-*.tgz
 mto --version
 ```
 
-You can also build the same artifact yourself: `npm pack` in a clone produces `mcp-token-optimizer-<version>.tgz`.
+You can also build the same artifact yourself: `npm pack` in a clone produces `shubhamcodess-mcp-token-optimizer-<version>.tgz`.
 
-> `npm install -g github:shubhamcodess/mcp-token-optimizer` is **not** supported: the package needs a TypeScript build, and npm does not install dev dependencies when building git dependencies. Use A or B. (Publishing to the npm registry is on the roadmap.)
+> `npm install -g github:shubhamcodess/mcp-token-optimizer` is **not** supported: the package needs a TypeScript build, and npm does not install dev dependencies when building git dependencies. Use A, B or C.
 
-With **B** the `mto` command is on your PATH. With **A**, either run `node dist/cli.js …` or link it:
+With **B** or **C** the `mto` command is on your PATH. With **A**, either run `node dist/cli.js …` or link it:
 
 ```bash
 npm link                # then: mto --version   (undo with: npm unlink -g mcp-token-optimizer)
