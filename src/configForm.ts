@@ -48,14 +48,13 @@ const HELP: Record<string, string> = {
   clients: "Per-client overrides by clientInfo.name glob",
 };
 
+/** Schema kind from zod's internal definition (zod 4 names: "object", "default", "array", ...). */
+const kindOf = (s: any): string | undefined => s?._zod?.def?.type;
+
 const inner = (s: any): any => {
   let cur = s;
-  for (;;) {
-    const t = cur?._def?.typeName;
-    if (t === "ZodDefault" || t === "ZodOptional" || t === "ZodNullable") cur = cur._def.innerType;
-    else if (t === "ZodEffects") cur = cur._def.schema;
-    else return cur;
-  }
+  while (["default", "prefault", "optional", "nullable"].includes(kindOf(cur) ?? "")) cur = cur._zod.def.innerType;
+  return cur;
 };
 
 /** Form descriptors generated from the zod schema: type, enum options, default and current value for every key. */
@@ -64,16 +63,16 @@ export function describeConfig(config: Config): Field[] {
   const out: Field[] = [];
   const walk = (schema: any, path: string[]) => {
     const s = inner(schema);
-    const t = s?._def?.typeName as string;
+    const t = kindOf(s);
     const key = path.join(".");
     const base = { path: key, section: path[0], value: getConfigValue(config, key), default: getConfigValue(defaults, key), description: HELP[key] };
-    if (t === "ZodObject") for (const [k, v] of Object.entries(s.shape as Record<string, unknown>)) walk(v, [...path, k]);
-    else if (t === "ZodBoolean") out.push({ ...base, kind: "boolean" });
-    else if (t === "ZodNumber") out.push({ ...base, kind: "number" });
-    else if (t === "ZodString") out.push({ ...base, kind: "string" });
-    else if (t === "ZodEnum") out.push({ ...base, kind: "enum", options: s._def.values });
-    else if (t === "ZodLiteral") out.push({ ...base, kind: "string", readOnly: true });
-    else if (t === "ZodArray" && inner(s._def.type)?._def?.typeName === "ZodString") out.push({ ...base, kind: "string-list" });
+    if (t === "object") for (const [k, v] of Object.entries(s.shape as Record<string, unknown>)) walk(v, [...path, k]);
+    else if (t === "boolean") out.push({ ...base, kind: "boolean" });
+    else if (t === "number") out.push({ ...base, kind: "number" });
+    else if (t === "string") out.push({ ...base, kind: "string" });
+    else if (t === "enum") out.push({ ...base, kind: "enum", options: s.options });
+    else if (t === "literal") out.push({ ...base, kind: "string", readOnly: true });
+    else if (t === "array" && kindOf(inner(s._zod.def.element)) === "string") out.push({ ...base, kind: "string-list" });
     else out.push({ ...base, kind: "json", readOnly: path[0] === "tools" });
   };
   walk(ConfigSchema, []);

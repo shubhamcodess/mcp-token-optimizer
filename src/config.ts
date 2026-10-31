@@ -44,14 +44,14 @@ export const ConfigSchema = z
         baseUrl: z.string().default("http://127.0.0.1:11434"),
         model: z.string().default("qwen3:4b"),
         /** Passed straight to Ollama `options` (temperature, num_ctx, top_p, num_predict, ...). */
-        options: z.record(z.unknown()).default({ temperature: 0.1, top_p: 0.9, num_ctx: 8192, num_predict: 1024 }),
+        options: z.record(z.string(), z.unknown()).default({ temperature: 0.1, top_p: 0.9, num_ctx: 8192, num_predict: 1024 }),
         keepAlive: z.string().default("10m"),
         /** Per-request ceiling. Effective timeout is also capped by summarize.maxLatencyMs. */
         timeoutMs: z.number().int().positive().default(30_000),
         /** Disable "thinking" for reasoning models (faster, deterministic summaries). */
         think: z.boolean().default(false),
       })
-      .default({}),
+      .prefault({}),
     summarize: z
       .object({
         enabled: z.boolean().default(true),
@@ -70,7 +70,7 @@ export const ConfigSchema = z
           .array(z.string())
           .default(["*read_file*", "*read_text_file*", "*read_multiple_files*", "*get_file_contents*", "*edit*", "*write*", "*diff*", "*patch*"]),
       })
-      .default({}),
+      .prefault({}),
     format: z
       .object({
         default: Format.default("auto"),
@@ -85,7 +85,7 @@ export const ConfigSchema = z
         /** Hint the agent that TOON may appear (added to MCP `initialize.instructions`). */
         announceToon: z.boolean().default(true),
       })
-      .default({}),
+      .prefault({}),
     prune: z
       .object({
         dropNull: z.boolean().optional(),
@@ -97,21 +97,21 @@ export const ConfigSchema = z
         /** Replace long runs of lines that repeat verbatim in another field with a pointer (default: on unless profile=conservative). */
         dedupeAcrossFields: z.boolean().optional(),
       })
-      .default({}),
+      .prefault({}),
     toolDefinitions: z
       .object({
         /** Also slim `tools/list` (drops $schema/title/examples...). Off by default: schemas are contracts. */
         enabled: z.boolean().default(false),
         stripKeys: z.array(z.string()).default(["$schema", "title", "examples", "$comment"]),
       })
-      .default({}),
+      .prefault({}),
     redaction: z
       .object({
         /** detect: log-only. redact: replace secrets with [REDACTED:type]. off: skip. */
         mode: z.enum(["off", "detect", "redact"]).default("detect"),
         extraPatterns: z.array(z.object({ name: z.string(), regex: z.string() })).default([]),
       })
-      .default({}),
+      .prefault({}),
     retrieval: z
       .object({
         /** Expose `mto_expand` so the agent can pull any lossy-trimmed original back on demand. */
@@ -119,7 +119,7 @@ export const ConfigSchema = z
         ttlMinutes: z.number().int().positive().default(240),
         maxEntries: z.number().int().positive().default(500),
       })
-      .default({}),
+      .prefault({}),
     /** Where `mto init`/`discover` look for MCP server lists, beyond the built-in agent locations. */
     discovery: z
       .object({
@@ -132,10 +132,10 @@ export const ConfigSchema = z
         /** Built-in agents to ignore, matched as a case-insensitive substring of the agent name. */
         skip: z.array(z.string()).default([]),
       })
-      .default({}),
+      .prefault({}),
     /** Skip everything for responses smaller than this (tokens). */
     skipBelowTokens: z.number().int().min(0).default(40),
-    cache: z.object({ enabled: z.boolean().default(true), maxEntries: z.number().int().default(200) }).default({}),
+    cache: z.object({ enabled: z.boolean().default(true), maxEntries: z.number().int().default(200) }).prefault({}),
     audit: z
       .object({
         enabled: z.boolean().default(true),
@@ -146,16 +146,16 @@ export const ConfigSchema = z
         /** Daily rollups older than this many days are dropped. */
         keepDays: z.number().int().positive().default(90),
       })
-      .default({}),
+      .prefault({}),
     /** The local daemon (dashboard API). Wrappers start it when it is not running; it never opens a browser by itself. */
     ui: z
       .object({
         autoStart: z.boolean().default(true),
         port: z.number().int().min(1).max(65535).default(8787),
       })
-      .default({}),
+      .prefault({}),
     /** Per-client overrides by `clientInfo.name` glob. An empty entry (`"visual studio code*": {}`) switches a built-in off. */
-    clients: z.record(ClientProfile).default({}),
+    clients: z.record(z.string(), ClientProfile).prefault({}),
     /** Watch agent config files for new/unwrapped servers and removed wrappers. */
     drift: z
       .object({
@@ -164,9 +164,9 @@ export const ConfigSchema = z
         /** Agents (case-insensitive name substrings) whose new servers are wrapped automatically. Empty = never touch configs on your own. */
         autoWrap: z.array(z.string()).default([]),
       })
-      .default({}),
+      .prefault({}),
     /** Per `server.tool` glob overrides. First match wins. */
-    tools: z.record(ToolRule).default({}),
+    tools: z.record(z.string(), ToolRule).prefault({}),
   })
   .strict();
 
