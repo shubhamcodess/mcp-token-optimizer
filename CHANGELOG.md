@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-31
+
+First release on npm: `npm install -g @shubhamcodess/mcp-token-optimizer`. No functional changes to the CLI or the dashboard.
+
 ### Added
 - **npm publishing**: the package is now `@shubhamcodess/mcp-token-optimizer` (the unscoped name belongs to another project on npm); commands are unchanged (`mto`, `mcp-token-optimizer`). A tag-driven **Publish to npm** workflow runs every check, publishes with provenance using the `NPM_TOKEN` secret, and verifies the registry install; `npm run pack:check` guards the tarball contents; `scripts/verify-registry.sh`. Source maps are no longer shipped. (#50, #51, #52, #53, #54, #55)
 
