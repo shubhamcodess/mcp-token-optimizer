@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { REPO } from './data'
-import { IconCheck, IconCopy, IconGithub, IconMoon, IconSun, Mark } from './Icons'
+import { NPM_URL, REPO } from './data'
+import { IconCheck, IconCopy, IconGithub, IconMoon, IconNpm, IconSun, Mark } from './Icons'
 
 type Theme = 'light' | 'dark'
 
@@ -32,7 +32,8 @@ export function Nav({ page = 'home' }: { page?: 'home' | 'docs' }) {
       <div className="nav__row">
         <a className="brand" href={page === 'home' ? '#top' : base} aria-label="mcp-token-optimizer home">
           <Mark />
-          mcp-token-optimizer
+          <span className="brand__full">mcp-token-optimizer</span>
+          <span className="brand__short">mto</span>
         </a>
         <nav className="nav__links" aria-label="Main">
           <span className="nav__anchors">
@@ -45,8 +46,11 @@ export function Nav({ page = 'home' }: { page?: 'home' | 'docs' }) {
             Docs
           </a>
           <span className="nav__sep" aria-hidden="true" />
-          <a href={REPO} aria-label="GitHub repository">
+          <a href={REPO} aria-label="GitHub repository" title="GitHub">
             <IconGithub />
+          </a>
+          <a href={NPM_URL} aria-label="npm package" title="npm">
+            <IconNpm />
           </a>
           <button
             type="button"
@@ -89,6 +93,9 @@ export function Footer() {
       <ul>
         <li>
           <a href={REPO}>GitHub</a>
+        </li>
+        <li>
+          <a href={NPM_URL}>npm</a>
         </li>
         <li>
           <a href={`${import.meta.env.BASE_URL}docs/`}>Docs</a>

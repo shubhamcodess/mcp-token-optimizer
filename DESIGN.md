@@ -197,8 +197,8 @@ Gently rounded throughout: 6px for tabs and inline code, 10px for buttons and co
 
 ### Buttons
 - **Shape:** gently rounded (10px), 42px tall, 16px horizontal padding, icon + label.
-- **Primary:** ink background, ground text ("Download latest", GitHub on the maker card).
-- **Line:** 1px hairline border at 15%, ink text, raise fill on hover.
+- **Primary:** ink background, ground text (GitHub on the maker card).
+- **Line:** 1px hairline border at 15%, ink text, raise fill on hover. The hero's actions ("Install with AI", "View on GitHub") both use it, so the copy-paste command stays the main action.
 - **Press:** translate 1px down; no scale, no glow.
 
 ### Tabs (terminal and install box)
@@ -237,4 +237,4 @@ Sticky 60px bar, mono wordmark with a monochrome mark, section anchors and Docs,
 - **Don't** add blinking or pulsing status dots.
 - **Don't** let a section be carried by prose; one line of copy beside a working artifact is the ceiling.
 - **Don't** use dot-matrix "each dot is 2%" charts; the user rejected them in favour of the shrinking bars.
-- **Don't** invent claims: no user counts, star counts, testimonials or an npm package before v3.
+- **Don't** invent claims: no user counts, star counts, or testimonials.

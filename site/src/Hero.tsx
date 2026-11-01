@@ -1,14 +1,17 @@
 import { useState, type KeyboardEvent } from 'react'
 import { AgentMock } from './AgentMock'
 import { CopyButton } from './Chrome'
-import { INSTALL_NPM, INSTALL_ONE_LINER, LATEST_URL, REPO, VERSION } from './data'
-import { IconDownload, IconGithub } from './Icons'
+import { INSTALLERS, LATEST_URL, REPO, VERSION, type InstallerId } from './data'
+import { IconGithub } from './Icons'
+import { InstallWithAI } from './InstallWithAI'
 
-const TABS = ['npm', 'release'] as const
-type Tab = (typeof TABS)[number]
+const TABS = INSTALLERS.map((i) => i.id)
 
 export function Hero() {
-  const [tab, setTab] = useState<Tab>('npm')
+  const [tab, setTab] = useState<InstallerId>('npm')
+
+  const installer = INSTALLERS.find((i) => i.id === tab) ?? INSTALLERS[0]
+  const hint = 'hint' in installer ? installer.hint : undefined
 
   function onKey(e: KeyboardEvent<HTMLDivElement>) {
     const i = TABS.indexOf(tab)
@@ -65,16 +68,24 @@ export function Hero() {
             <div className="cmd__row" role="tabpanel" id="install-panel" aria-labelledby={`tab-${tab}`}>
               <code className="cmd__line">
                 <span className="p">$ </span>
-                {tab === 'release' ? INSTALL_ONE_LINER : INSTALL_NPM}
+                {installer.cmd}
               </code>
-              <CopyButton text={tab === 'release' ? INSTALL_ONE_LINER : INSTALL_NPM} />
+              <CopyButton text={installer.cmd} />
             </div>
+            {hint && (
+              <p className="cmd__hint">
+                {hint === 'releases' ? (
+                  <>
+                    Or download the <a href={LATEST_URL}>.tgz from Releases</a>.
+                  </>
+                ) : (
+                  hint
+                )}
+              </p>
+            )}
           </div>
           <div className="hero__btns">
-            <a className="btn btn--solid" href={LATEST_URL}>
-              <IconDownload />
-              Download latest
-            </a>
+            <InstallWithAI />
             <a className="btn btn--line" href={REPO}>
               <IconGithub />
               View on GitHub

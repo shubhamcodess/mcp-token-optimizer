@@ -1,5 +1,7 @@
+import { version } from '../../package.json'
+
 export const REPO = 'https://github.com/shubhamcodess/mcp-token-optimizer'
-export const VERSION: string = '0.2.1'
+export const VERSION: string = version
 export const AUTHOR = 'Shubham Prakash'
 export const GITHUB_USER = 'shubhamcodess'
 // Set to the author's LinkedIn profile URL to show the link in the Maker section.
@@ -14,7 +16,17 @@ export const DOWNLOAD_LATEST = `curl -fsSL https://api.github.com/repos/${GITHUB
 export const INSTALL_LATEST = 'npm install -g ./*mcp-token-optimizer-*.tgz' // matches the old (0.2.0) and scoped tarball names
 export const INSTALL_ONE_LINER = `${DOWNLOAD_LATEST} && ${INSTALL_LATEST}`
 // the unscoped name belongs to another project on npm: always use the scoped package
-export const INSTALL_NPM = 'npm install -g @shubhamcodess/mcp-token-optimizer'
+export const PACKAGE = '@shubhamcodess/mcp-token-optimizer'
+export const NPM_URL = `https://www.npmjs.com/package/${PACKAGE}`
+
+export const INSTALLERS = [
+  { id: 'npm', cmd: `npm install -g ${PACKAGE}` },
+  { id: 'pnpm', cmd: `pnpm add -g ${PACKAGE}`, hint: 'First global install? Run pnpm setup once.' },
+  { id: 'yarn', cmd: `yarn global add ${PACKAGE}`, hint: 'Yarn 1 only. Yarn 2+ has no global install.' },
+  { id: 'bun', cmd: `bun add -g ${PACKAGE}`, hint: 'Runs on Node, so Node 20+ must be installed.' },
+  { id: 'release', cmd: INSTALL_ONE_LINER, hint: 'releases' },
+] as const
+export type InstallerId = (typeof INSTALLERS)[number]['id']
 
 
 

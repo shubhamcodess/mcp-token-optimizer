@@ -1,13 +1,16 @@
 name: Deploy site to GitHub Pages
 
 # Builds the landing page and docs in site/ (Vite + React) and publishes them with GitHub Pages.
-# The docs page renders README.md at build time, so README changes redeploy the site too.
+# The docs page and the install prompt read repo files at build time, so changes to them redeploy too.
 on:
   push:
     branches: [main]
     paths:
       - 'site/**'
       - 'README.md'
+      - 'package.json'
+      - 'docs/getting-started.md'
+      - 'TROUBLESHOOTING.md'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
