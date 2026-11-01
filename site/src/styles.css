@@ -2573,3 +2573,121 @@ h1 .cut::after {
     display: none;
   }
 }
+
+/* Install box hint + Install with AI */
+.cmd__tabs {
+  flex-wrap: wrap;
+}
+.cmd__hint {
+  padding: 0 4px 6px 10px;
+  font-size: 0.8125rem;
+  color: var(--text-3);
+}
+.cmd__hint a {
+  color: var(--text-2);
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 0.22em;
+}
+.ai-btn__icons {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  overflow: hidden;
+}
+.ai-btn__icons svg {
+  position: absolute;
+  inset: 0;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.ai-btn__in {
+  animation: ai-in 500ms var(--ease) both;
+}
+.ai-btn__out {
+  animation: ai-out 500ms var(--ease) both;
+}
+@keyframes ai-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+@keyframes ai-out {
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+.hero__btns {
+  position: relative;
+}
+/* Floats below the buttons, so showing or hiding it never moves the page */
+.ai-note {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.ai-note__msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  animation: note-in 450ms var(--ease) both;
+}
+.ai-note__msg svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  color: var(--ok);
+  stroke-width: 2.2;
+  stroke-dasharray: 22;
+  animation: note-check 420ms var(--ease) 120ms both;
+}
+.ai-note__msg.is-leaving {
+  animation: note-out 350ms ease-in both;
+}
+@keyframes note-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+    filter: blur(3px);
+  }
+}
+@keyframes note-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes note-check {
+  from {
+    stroke-dashoffset: 22;
+  }
+}
+
+.brand {
+  white-space: nowrap;
+}
+
+.brand__short {
+  display: none;
+}
+@media (max-width: 520px) {
+  .brand__full {
+    display: none;
+  }
+  .brand__short {
+    display: inline;
+  }
+  .nav__links a,
+  .nav__links button {
+    padding: 0 8px;
+  }
+}
