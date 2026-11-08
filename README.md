@@ -8,14 +8,17 @@
 
 **A self-hosted proxy between your AI agent and its MCP servers that shrinks every tool response: pruning, [TOON](https://github.com/toon-format/toon) encoding and local-LLM summarization, without changing what the agent can do.**
 
-[![CI](https://github.com/shubhamcodess/mcp-token-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/shubhamcodess/mcp-token-optimizer/actions/workflows/ci.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%E2%89%A520-339933.svg)](https://nodejs.org)
-[![Local LLM](https://img.shields.io/badge/local%20LLM-Ollama-000000.svg)](https://ollama.com)
-[![Protocol](https://img.shields.io/badge/protocol-MCP-6f42c1.svg)](https://modelcontextprotocol.io)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Unique visitors](https://visitor-badge.laobi.icu/badge?page_id=shubhamcodess.mcp-token-optimizer&left_text=unique%20visitors)](https://github.com/shubhamcodess/mcp-token-optimizer)
-
+[![CI](https://img.shields.io/github/actions/workflow/status/shubhamcodess/mcp-token-optimizer/ci.yml?style=for-the-badge&logo=github&label=CI)](https://github.com/shubhamcodess/mcp-token-optimizer/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520-339933.svg?style=for-the-badge&logo=nodedotjs)](https://nodejs.org)
+[![Local LLM](https://img.shields.io/badge/local%20LLM-Ollama-000000.svg?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.com)
+[![Protocol](https://img.shields.io/badge/protocol-MCP-6f42c1.svg?style=for-the-badge)](https://modelcontextprotocol.io)
+[![Unique Visitors](https://img.shields.io/badge/unique%20visitors-171-blue?style=for-the-badge&logo=eye&logoColor=white)](https://github.com/shubhamcodess/mcp-token-optimizer)
+<br>
+---
+[![Downloads Weekly](https://img.shields.io/npm/dw/@shubhamcodess/mcp-token-optimizer?style=for-the-badge&logo=npm&color=CB3837)](https://www.npmjs.com/package/@shubhamcodess/mcp-token-optimizer)
+[![Downloads Monthly](https://img.shields.io/npm/dm/@shubhamcodess/mcp-token-optimizer?style=for-the-badge&logo=npm&color=28a745)](https://www.npmjs.com/package/@shubhamcodess/mcp-token-optimizer)
+[![Downloads Total](https://img.shields.io/npm/dt/@shubhamcodess/mcp-token-optimizer?style=for-the-badge&logo=npm&color=007EC6)](https://www.npmjs.com/package/@shubhamcodess/mcp-token-optimizer)
+---
 [**Quick start**](#quick-start) &nbsp;·&nbsp; [**How it works**](docs/how-it-works.md) &nbsp;·&nbsp; [**Docs**](#documentation) &nbsp;·&nbsp; [**Testing**](TESTING.md) &nbsp;·&nbsp; [**Contributing**](CONTRIBUTING.md)
 
 </div>
