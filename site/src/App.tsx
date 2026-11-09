@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { Footer, Nav } from './Chrome'
 import { Field } from './Field'
 import { Hero } from './Hero'
-import { Benchmarks, Features, HowItWorks, Install, Logos, Maker, TestIt } from './Sections'
+import { ReviewPanel } from './ReviewPanel'
+import { Benchmarks, Features, GetStarted, HowItWorks, Install, Logos, Maker, TestIt } from './Sections'
 
 /** Adds .in to every .reveal element the first time it scrolls into view. */
 export function useReveal() {
@@ -40,9 +41,11 @@ export default function App() {
           <Install />
           <TestIt />
           <Maker />
+          <GetStarted />
         </main>
         <Footer />
       </div>
+      <ReviewPanel />
     </>
   )
 }

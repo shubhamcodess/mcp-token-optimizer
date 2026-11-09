@@ -1,8 +1,9 @@
 import { useEffect, useState, type RefObject } from 'react'
+import { GITHUB_USER, NPM_SINCE, PACKAGE } from './data'
 
 export function usePrefersReducedMotion(): boolean {
   const query = '(prefers-reduced-motion: reduce)'
-  const [reduced, setReduced] = useState(() => window.matchMedia(query).matches)
+  const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
   useEffect(() => {
     const mq = window.matchMedia(query)
     const onChange = () => setReduced(mq.matches)
@@ -13,7 +14,7 @@ export function usePrefersReducedMotion(): boolean {
 }
 
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches)
+  const [matches, setMatches] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
   useEffect(() => {
     const mq = window.matchMedia(query)
     const onChange = () => setMatches(mq.matches)
@@ -61,4 +62,86 @@ export function animateNumber(
   }
   raf = requestAnimationFrame(tick)
   return () => cancelAnimationFrame(raf)
+}
+
+export interface Stats {
+  /** npm downloads since the package was first published */
+  downloads: number | null
+  /** npm downloads in the last 7 days */
+  weekly: number | null
+  stars: number | null
+}
+
+const STATS_KEY = 'mto-stats'
+const STATS_TTL = 10 * 60 * 1000 // GitHub allows 60 unauthenticated requests an hour per IP
+let pending: Promise<Stats> | null = null
+
+async function getJson<T>(url: string): Promise<T | null> {
+  try {
+    const r = await fetch(url)
+    return r.ok ? ((await r.json()) as T) : null
+  } catch {
+    return null
+  }
+}
+
+function loadStats(): Promise<Stats> {
+  if (pending) return pending
+  pending = (async () => {
+    try {
+      const hit = JSON.parse(sessionStorage.getItem(STATS_KEY) ?? 'null') as (Stats & { at: number }) | null
+      if (hit && Date.now() - hit.at < STATS_TTL) return hit
+    } catch {
+      /* storage unavailable: fetch fresh */
+    }
+    // npm caps a point range at 18 months, so count from whichever is later
+    const today = new Date().toISOString().slice(0, 10)
+    const cap = new Date(Date.now() - 540 * 864e5).toISOString().slice(0, 10)
+    const from = NPM_SINCE > cap ? NPM_SINCE : cap
+    const [npm, week, gh] = await Promise.all([
+      getJson<{ downloads: number }>(`https://api.npmjs.org/downloads/point/${from}:${today}/${PACKAGE}`),
+      getJson<{ downloads: number }>(`https://api.npmjs.org/downloads/point/last-week/${PACKAGE}`),
+      getJson<{ stargazers_count: number }>(`https://api.github.com/repos/${GITHUB_USER}/mcp-token-optimizer`),
+    ])
+    const stats: Stats = {
+      downloads: npm?.downloads ?? null,
+      weekly: week?.downloads ?? null,
+      stars: gh?.stargazers_count ?? null,
+    }
+    try {
+      if (stats.downloads !== null && stats.stars !== null)
+        sessionStorage.setItem(STATS_KEY, JSON.stringify({ ...stats, at: Date.now() }))
+    } catch {
+      /* ignore */
+    }
+    return stats
+  })()
+  return pending
+}
+
+/** Live npm downloads and GitHub stars from the public APIs. Null until loaded or on failure. */
+export function useStats(): Stats {
+  const [stats, setStats] = useState<Stats>({ downloads: null, weekly: null, stars: null })
+  useEffect(() => {
+    let live = true
+    loadStats().then((s) => live && setStats(s))
+    return () => {
+      live = false
+    }
+  }, [])
+  return stats
+}
+
+/**
+ * Counts from 0 up to `target` once it is known (ease-out, like the benchmark bars).
+ * Null until the target arrives; jumps straight to it when reduced motion is on.
+ */
+export function useCountUp(target: number | null, ms = 1400): number | null {
+  const reduced = usePrefersReducedMotion()
+  const [value, setValue] = useState<number | null>(null)
+  useEffect(() => {
+    if (target === null || reduced) return
+    return animateNumber(0, target, ms, (v) => setValue(Math.round(v)))
+  }, [target, reduced, ms])
+  return reduced ? target : value
 }

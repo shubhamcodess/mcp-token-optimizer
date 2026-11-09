@@ -115,6 +115,16 @@ export const IconArrow = () => (
   </Base>
 )
 
+export const IconChart = () => (
+  <Base>
+    <path d="M4 20h16M7 16V10M12 16V5M17 16v-3" />
+  </Base>
+)
+export const IconStar = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+    <path d="M12 2.8l2.83 5.73 6.33.92-4.58 4.46 1.08 6.3L12 17.24l-5.66 2.97 1.08-6.3-4.58-4.46 6.33-.92z" />
+  </svg>
+)
 export function Mark() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

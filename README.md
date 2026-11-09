@@ -8,6 +8,9 @@
 
 **A self-hosted proxy between your AI agent and its MCP servers that shrinks every tool response: pruning, [TOON](https://github.com/toon-format/toon) encoding and local-LLM summarization, without changing what the agent can do.**
 
+[![npm](https://img.shields.io/npm/v/@shubhamcodess/mcp-token-optimizer.svg)](https://www.npmjs.com/package/@shubhamcodess/mcp-token-optimizer)
+[![npm downloads](https://img.shields.io/npm/dm/@shubhamcodess/mcp-token-optimizer.svg)](https://www.npmjs.com/package/@shubhamcodess/mcp-token-optimizer)
+[![GitHub stars](https://img.shields.io/github/stars/shubhamcodess/mcp-token-optimizer?style=flat)](https://github.com/shubhamcodess/mcp-token-optimizer/stargazers)
 [![CI](https://github.com/shubhamcodess/mcp-token-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/shubhamcodess/mcp-token-optimizer/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-339933.svg)](https://nodejs.org)
@@ -51,17 +54,15 @@ In that live A/B run, the three files the agent wrote from the optimized result 
 
 ## Highlights
 
-| | |
-|---|---|
-| 🧾 **Lossless first** | JSON ↔ TOON is emitted only after a verified round-trip; duplicate blocks become pointers; the canonical copy is never touched |
-| 🛟 **Fail-open, never bigger** | any error, timeout or Ollama outage forwards the original; an optimized result is used only if it is strictly cheaper |
-| 🔎 **`mto_expand`** | notes name exactly what was pruned; the agent can fetch the exact original (outline, JSON path, grep) on demand |
-| 🌗 **Shadow mode** | measure real savings while forwarding the originals, so you can roll out with zero risk |
-| 🔌 **Any MCP client** | stdio wrapper *and* local HTTP/SSE proxy; installs into VS Code Copilot, Claude, Cursor, Windsurf, Gemini CLI, Cline, Roo (JSONC-safe, reversible) |
-| 🧠 **Local summarization** | your Ollama model, your parameters, a hard latency budget and a fact-coverage guard; code and file reads are never summarized |
-| 🔐 **Private by design** | binds to `127.0.0.1`, no telemetry, credentials forwarded but never stored, optional secret redaction |
-| 🖥️ **Local dashboard** | `mto ui`: overview, live traffic, connections, config editor, eval history, advisor and drift warnings, served by the daemon, no CDN ([dashboard guide](docs/dashboard.md)) |
-| 🧪 **Measurable** | capture, bench, compare and stats built in; 89 tests and a 24-check end-to-end smoke test |
+- **Lossless first.** JSON ↔ TOON is emitted only after a verified round-trip; duplicate blocks become pointers; the canonical copy is never touched.
+- **Fail-open, never bigger.** Any error, timeout or Ollama outage forwards the original; an optimized result is used only if it is strictly cheaper.
+- **`mto_expand`.** Notes name exactly what was pruned; the agent can fetch the exact original (outline, JSON path, grep) on demand.
+- **Shadow mode.** Measure real savings while forwarding the originals, so you can roll out with zero risk.
+- **Any MCP client.** Stdio wrapper *and* local HTTP/SSE proxy; installs into VS Code Copilot, Claude, Cursor, Windsurf, Gemini CLI, Cline, Roo (JSONC-safe, reversible).
+- **Local summarization.** Your Ollama model, your parameters, a hard latency budget and a fact-coverage guard; code and file reads are never summarized.
+- **Private by design.** Binds to `127.0.0.1`, no telemetry, credentials forwarded but never stored, optional secret redaction.
+- **Local dashboard.** `mto ui`: overview, live traffic, connections, config editor, eval history, advisor and drift warnings, served by the daemon, no CDN ([dashboard guide](docs/dashboard.md)).
+- **Measurable.** Capture, bench, compare and stats built in; 92 tests and a 24-check end-to-end smoke test.
 
 ## Quick start
 
@@ -82,17 +83,17 @@ Full walkthrough: [Getting started](docs/getting-started.md).
 
 | Guide | What is in it |
 |---|---|
-| 🚀 [**Getting started**](docs/getting-started.md) | Install, wire your agent, try it without an agent |
-| 🧠 [**How it works**](docs/how-it-works.md) | The pipeline, operating modes, stdio vs HTTP, `mto_expand` |
-| 🎛️ [**Tuning**](docs/tuning.md) | Profiles, output formats, local summarization, capture and bench |
-| 📖 [**Reference**](docs/reference.md) | Every config key, CLI command, file and environment variable |
-| 🖥️ [**Dashboard**](docs/dashboard.md) | What each page shows and what it can change |
-| 🛟 [**Troubleshooting**](TROUBLESHOOTING.md) | Symptoms, causes and fixes |
-| 🔐 [**Security and privacy**](SECURITY.md) | Threat model, what is stored, redaction, reporting a vulnerability |
-| 🧪 [**Testing**](TESTING.md) | Automated tests, benchmarks, live A/B procedure, verification status |
-| 🤝 [**Contributing**](CONTRIBUTING.md) | Dev setup, code layout, checks, pull request checklist |
-| 📜 [**Code of conduct**](CODE_OF_CONDUCT.md) | Expected behaviour in this project |
-| 📝 [**Changelog**](CHANGELOG.md) | Release history |
+| [**Getting started**](docs/getting-started.md) | Install, wire your agent, try it without an agent |
+| [**How it works**](docs/how-it-works.md) | The pipeline, operating modes, stdio vs HTTP, `mto_expand` |
+| [**Tuning**](docs/tuning.md) | Profiles, output formats, local summarization, capture and bench |
+| [**Reference**](docs/reference.md) | Every config key, CLI command, file and environment variable |
+| [**Dashboard**](docs/dashboard.md) | What each page shows and what it can change |
+| [**Troubleshooting**](TROUBLESHOOTING.md) | Symptoms, causes and fixes |
+| [**Security and privacy**](SECURITY.md) | Threat model, what is stored, redaction, reporting a vulnerability |
+| [**Testing**](TESTING.md) | Automated tests, benchmarks, live A/B procedure, verification status |
+| [**Contributing**](CONTRIBUTING.md) | Dev setup, code layout, checks, pull request checklist |
+| [**Code of conduct**](CODE_OF_CONDUCT.md) | Expected behaviour in this project |
+| [**Changelog**](CHANGELOG.md) | Release history |
 
 ## Contributing
 

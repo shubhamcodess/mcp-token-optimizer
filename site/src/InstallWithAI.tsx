@@ -6,7 +6,7 @@ import { AGENT_MARKS } from './logos'
 
 const MARKS = AGENT_MARKS.filter((a) => a.path)
 const STEP_MS = 1800
-const FILE = 'install-mto.md'
+const FILE = 'install-mto.txt'
 const NOTE_MS = 8000
 const NOTE_EXIT_MS = 350
 
@@ -19,7 +19,7 @@ function Mark({ index, className }: { index: number; className: string }) {
 }
 
 function download() {
-  const url = URL.createObjectURL(new Blob([INSTALL_PROMPT], { type: 'text/markdown;charset=utf-8' }))
+  const url = URL.createObjectURL(new Blob([INSTALL_PROMPT], { type: 'text/plain;charset=utf-8' }))
   const a = document.createElement('a')
   a.href = url
   a.download = FILE
@@ -27,7 +27,7 @@ function download() {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-/** Copies and downloads a setup prompt to hand to a coding agent. The icon cycles through the agents. */
+/** Copies a short setup prompt to hand to a coding agent. The icon cycles through the agents. */
 export function InstallWithAI() {
   const reduced = usePrefersReducedMotion()
   const [i, setI] = useState(0)
@@ -56,12 +56,13 @@ export function InstallWithAI() {
     }
   }, [note])
 
+  // Copy only; the file is the fallback when the clipboard is blocked.
   async function run() {
-    download()
     let result: 'copied' | 'saved' = 'copied'
     try {
       await navigator.clipboard.writeText(INSTALL_PROMPT)
     } catch {
+      download()
       result = 'saved'
     }
     setLeaving(false)
@@ -74,7 +75,7 @@ export function InstallWithAI() {
         type="button"
         className="btn btn--line ai-btn"
         onClick={run}
-        title="Copies and downloads a setup prompt for your coding agent"
+        title="Copies a short setup prompt for your coding agent"
       >
         <span className="ai-btn__icons" aria-hidden="true">
           <Mark key={`out-${i}`} index={(i - 1 + MARKS.length) % MARKS.length} className="ai-btn__out" />
@@ -87,7 +88,7 @@ export function InstallWithAI() {
           <p key={note.id} className={leaving ? 'ai-note__msg is-leaving' : 'ai-note__msg'}>
             <IconCheck />
             {note.result === 'copied'
-              ? `Prompt copied and saved as ${FILE}. Paste it into your agent.`
+              ? 'Setup prompt copied. Paste it into your coding agent.'
               : `Saved as ${FILE}. Couldn't copy it, so attach the file to your agent.`}
           </p>
         )}

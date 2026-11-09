@@ -1,6 +1,24 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { AUTHOR, BENCHMARKS, DOWNLOAD_LATEST, GITHUB_USER, INSTALL_LATEST, LINKEDIN, REPO, VERSION, fmt } from './data'
-import { animateNumber, usePrefersReducedMotion, useSeen } from './hooks'
+import { CopyButton, ProductHuntBadge, StarButton } from './Chrome'
+import {
+  AUTHOR,
+  BENCHMARKS,
+  DOWNLOAD_LATEST,
+  GITHUB_USER,
+  INSTALLERS,
+  INSTALL_LATEST,
+  LINKEDIN,
+  NPM_URL,
+  RELEASE_DATE,
+  REPO,
+  SMOKE_COUNT,
+  TEST_COUNT,
+  VERSION,
+  compact,
+  fmt,
+} from './data'
+import { animateNumber, usePrefersReducedMotion, useSeen, useStats } from './hooks'
+import { useShowStars } from './review'
 import {
   IconArrow,
   IconBook,
@@ -477,7 +495,7 @@ const TEST_TABS: TermTab[] = [
   {
     id: 'test',
     label: 'npm test',
-    foot: 'real output, abridged · 42 tests',
+    foot: `real output, abridged · ${TEST_COUNT} tests`,
     lines: [
       { k: 'cmd', t: 'npm test' },
       ...UNIT.map((t, i) => ({ k: 'out' as const, t: `ok ${i + 1} - ${t}` })),
@@ -619,6 +637,8 @@ const CONTRIB = [
 ]
 
 export function Maker() {
+  const { downloads, stars } = useStats()
+  const showStars = useShowStars(stars)
   return (
     <section className="sec" id="contribute" aria-labelledby="maker-title">
       <div className="sec__head reveal">
@@ -648,12 +668,29 @@ export function Maker() {
             <div>
               <dt>latest release</dt>
               <dd>
-                <a href={`${REPO}/releases/latest`}>v{VERSION}</a> · Oct 31, 2026
+                <a href={`${REPO}/releases/latest`}>v{VERSION}</a>
+                {RELEASE_DATE && ` · ${RELEASE_DATE}`}
+              </dd>
+            </div>
+            <div>
+              <dt>adoption</dt>
+              <dd>
+                <a href={NPM_URL}>{downloads === null ? '—' : fmt(downloads)} npm downloads</a>
+                {showStars && (
+                  <>
+                    {' · '}
+                    <a href={REPO}>
+                      {compact(stars)} stars
+                    </a>
+                  </>
+                )}
               </dd>
             </div>
             <div>
               <dt>tested</dt>
-              <dd>42 tests · 24 smoke checks</dd>
+              <dd>
+                {TEST_COUNT} tests · {SMOKE_COUNT} smoke checks
+              </dd>
             </div>
             <div>
               <dt>stack</dt>
@@ -665,11 +702,11 @@ export function Maker() {
             </div>
           </dl>
           <div className="dev__links">
-            <a className="btn btn--solid" href={`https://github.com/${GITHUB_USER}`}>
+            <a className="btn btn--line btn--social" href={`https://github.com/${GITHUB_USER}`}>
               <IconGithub />@{GITHUB_USER}
             </a>
             {LINKEDIN && (
-              <a className="btn btn--line" href={LINKEDIN}>
+              <a className="btn btn--line btn--social btn--linkedin" href={LINKEDIN}>
                 <IconLinkedin />
                 LinkedIn
               </a>
@@ -689,6 +726,35 @@ export function Maker() {
             </a>
           ))}
         </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Final call to action ---------- */
+
+export function GetStarted() {
+  const cmd = INSTALLERS[0].cmd
+  return (
+    <section className="sec cta" id="get-started" aria-labelledby="cta-title">
+      <div className="cta__inner reveal">
+        <h2 id="cta-title">Your agent reads less. You pay less.</h2>
+        <p className="sub">Install in a minute, start in shadow mode, keep every original.</p>
+        <div className="cta__cmd">
+          <code>
+            <span className="p">$ </span>
+            {cmd}
+          </code>
+          <CopyButton text={cmd} />
+        </div>
+        <div className="cta__btns">
+          <StarButton className="btn btn--solid" label="Star on GitHub" />
+          <a className="btn btn--line" href={`${BASE}docs/`}>
+            <IconBook />
+            Read the docs
+          </a>
+        </div>
+        <ProductHuntBadge className="cta__ph" />
       </div>
     </section>
   )

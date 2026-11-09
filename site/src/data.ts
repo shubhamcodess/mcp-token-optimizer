@@ -54,3 +54,35 @@ export const BENCHMARKS: Bench[] = [
 ]
 
 export const fmt = (n: number) => n.toLocaleString('en-US')
+
+/* ---------- Launch and social proof ---------- */
+
+// The public site URL (set in vite.config.ts; SITE_URL env overrides it for a custom domain).
+export const SITE_URL: string = __SITE_URL__
+export const TITLE = 'mto: shrink MCP tool responses for AI agents and cut token cost'
+
+// Derived from CHANGELOG.md, tests/ and scripts/smoke.mjs at build time (see vite.config.ts).
+export const RELEASE_DATE: string = __BUILD_FACTS__.releaseDate
+export const TEST_COUNT: number = __BUILD_FACTS__.tests
+export const SMOKE_COUNT: number = __BUILD_FACTS__.smoke
+
+// First day on npm; downloads are counted from here (npm caps a range at 18 months).
+export const NPM_SINCE = '2026-10-01'
+// Below this many stars the count is hidden and the button just says "Star".
+export const STAR_MIN = 25
+
+/**
+ * Product Hunt. Fill slug once the post exists (the "upcoming" page is enough): that turns on
+ * the Product Hunt buttons. Set live to true on launch day for the hero pill, then back.
+ */
+export const PRODUCT_HUNT = {
+  slug: '',
+  live: false,
+}
+export const PH_URL = PRODUCT_HUNT.slug
+  ? `https://www.producthunt.com/posts/${PRODUCT_HUNT.slug}?utm_source=mto-site&utm_medium=button&utm_campaign=launch`
+  : ''
+
+/** 1234 → "1.2k" */
+export const compact = (n: number) =>
+  n < 1000 ? String(n) : `${(n / 1000).toFixed(n < 10000 ? 1 : 0).replace(/\.0$/, '')}k`
