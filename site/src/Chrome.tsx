@@ -205,6 +205,10 @@ export function Footer() {
       <div className="foot__id">
         <span>
           © {YEAR} {AUTHOR} · mcp-token-optimizer · Apache-2.0 · runs on your machine, no telemetry
+          <span className="foot__privacy">
+            Privacy: this site sets no cookies and runs no analytics. Download and star counts load from the
+            public npm and GitHub APIs.
+          </span>
         </span>
         <ProductHuntBadge size="sm" />
       </div>

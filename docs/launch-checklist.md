@@ -35,6 +35,16 @@ Tracks everything the site and repo need before the Product Hunt launch. Tick it
 - [x] Review switch: open the site with `?review` to flip Product Hunt (off / badges / launch day) and star counts
 - [x] Footer: year and author, Product Hunt badge
 
+## Security headers and hosting
+
+- [x] Content-Security-Policy as a `<meta>` (inline theme script allowed by hash, API hosts listed in connect-src)
+- [x] Referrer-Policy as a `<meta>` (strict-origin-when-cross-origin)
+- [x] External links carry `target="_blank" rel="noopener noreferrer"` in the static HTML
+- [x] Privacy note in the footer (no cookies, no analytics, which APIs are called)
+- [x] Font preloads for the two Latin font files
+- [ ] Headers GitHub Pages cannot send: X-Content-Type-Options, frame-ancestors / X-Frame-Options, Permissions-Policy, long cache on `/assets/`. Needs Cloudflare (proxy or Pages) when the custom domain is set up *(decision)*
+- [ ] `robots.txt` at the host root: crawlers only read `<host>/robots.txt`, so on `github.io/mcp-token-optimizer/` it is ignored. Fixed by the custom domain; until then submit the sitemap in Google Search Console *(manual)*
+
 ## P1
 
 - [x] Web manifest and PNG app icons (`icon-180.png` as apple-touch-icon, `icon-512.png`)

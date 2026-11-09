@@ -3166,3 +3166,11 @@ summary {
 .proof__num {
   transition: color 150ms var(--ease);
 }
+
+.foot__privacy {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-3);
+  opacity: 0.85;
+}

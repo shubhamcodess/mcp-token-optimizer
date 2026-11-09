@@ -14,7 +14,9 @@ for (const [page, file] of [
   const path = join(site, file)
   const html = readFileSync(path, 'utf8')
   if (!html.includes('<!--app-->')) throw new Error(`${file}: no <!--app--> placeholder`)
-  const body = render(page)
+  // external links open in a new tab without handing over window.opener; the browser bundle does the
+  // same at runtime (externalLinks.ts), this puts it in the static HTML crawlers read
+  const body = render(page).replace(/<a ((?:(?!target=)[^>])*?)href="(https?:\/\/[^"]+)"/g, '<a $1href="$2" target="_blank" rel="noopener noreferrer"')
   writeFileSync(path, html.replace('<!--app-->', () => body))
   console.log(`prerendered ${file} (${Math.round(body.length / 1024)} KB)`)
 }

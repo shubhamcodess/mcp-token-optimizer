@@ -120,7 +120,7 @@ function Proof() {
       <a className="proof__main" href={NPM_URL} aria-label={downloads === null ? undefined : `${fmt(downloads)} npm downloads`}>
         <IconNpm />
         <span className="proof__num" style={width(downloads)}>
-          {d === null ? '—' : fmt(d)}
+          {downloads === null ? '—' : fmt(d ?? 0)}
         </span>
         <span className="proof__label">
           npm downloads
