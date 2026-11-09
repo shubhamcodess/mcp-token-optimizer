@@ -1,13 +1,34 @@
 import { marked } from 'marked'
 import { useEffect, useMemo, useState } from 'react'
+import troubleshooting from '../../TROUBLESHOOTING.md?raw'
 import readme from '../../README.md?raw'
+import security from '../../SECURITY.md?raw'
+import dashboard from '../../docs/dashboard.md?raw'
+import gettingStarted from '../../docs/getting-started.md?raw'
+import howItWorks from '../../docs/how-it-works.md?raw'
+import reference from '../../docs/reference.md?raw'
+import tuning from '../../docs/tuning.md?raw'
 import { Footer, Nav } from './Chrome'
 import { REPO } from './data'
+import { ReviewPanel } from './ReviewPanel'
 import { IconBook, IconCode, IconGithub } from './Icons'
 
 const BLOB = `${REPO}/blob/main`
 
-// Source files behind each README section, linked under its heading.
+// Every guide the page is assembled from, by repository path. Numbered "## n." sections are taken
+// from each, plus "Why" and "Results" from the README, then ordered by number.
+const GUIDES: Record<string, string> = {
+  'README.md': readme,
+  'docs/getting-started.md': gettingStarted,
+  'docs/how-it-works.md': howItWorks,
+  'docs/tuning.md': tuning,
+  'docs/reference.md': reference,
+  'TROUBLESHOOTING.md': troubleshooting,
+  'SECURITY.md': security,
+  'docs/dashboard.md': dashboard,
+}
+
+// Source files behind each section, linked under its heading.
 const SOURCES: Record<string, string[]> = {
   '1': ['src/cli.ts', 'src/installer.ts', 'src/config.ts'],
   '2': ['scripts/mcp-call.mjs', 'examples/fake-mcp-server.mjs'],
@@ -36,9 +57,27 @@ function slug(text: string) {
     .replace(/\s/g, '-')
 }
 
-function absolutize(md: string) {
-  // relative repo links (TESTING.md, docs/…, LICENSE) → GitHub
-  return md.replace(/\]\((?!https?:|#|mailto:)([^)\s]+)\)/g, (_m, p: string) => `](${BLOB}/${p.replace(/^\.\//, '')})`)
+/** Resolves a link relative to the guide's own folder into a repository path. */
+function repoPath(from: string, href: string) {
+  const parts = from.split('/').slice(0, -1)
+  for (const seg of href.replace(/^\.\//, '').split('/')) {
+    if (seg === '..') parts.pop()
+    else if (seg !== '.') parts.push(seg)
+  }
+  return parts.join('/')
+}
+
+/**
+ * Relative links: to a section on this page → an in-page anchor; to a guide on this page → its first
+ * section; to anything else in the repo (TESTING.md, LICENSE, a config file) → GitHub.
+ */
+function rewriteLinks(md: string, from: string, firstId: Record<string, string>) {
+  return md.replace(/\]\((?!https?:|#|mailto:)([^)\s]+)\)/g, (_m, href: string) => {
+    const [path, hash] = href.split('#')
+    const target = repoPath(from, path)
+    if (target in GUIDES && (hash || firstId[target])) return `](#${hash ?? firstId[target]})`
+    return `](${BLOB}/${target}${hash ? `#${hash}` : ''})`
+  })
 }
 
 function highlight(html: string) {
@@ -67,17 +106,25 @@ interface Section {
   title: string
   id: string
   html: string
+  file: string
 }
 
 function buildSections(): Section[] {
-  const md = absolutize(readme)
-  const parts = md.split(/\n(?=## )/)
-  const wanted = parts.filter((p) => /^## (\d+\.|Why\b|Results\b)/.test(p))
-  return wanted.map((p) => {
-    const first = p.split('\n')[0].replace(/^## /, '')
-    const num = (first.match(/^(\d+)\./) ?? [])[1] ?? ''
-    const id = slug(first)
-    const body = p.split('\n').slice(1).join('\n').replace(/\n---\s*$/m, '')
+  const raw = Object.entries(GUIDES).flatMap(([file, md]) =>
+    md
+      .split(/\n(?=## )/)
+      .filter((p) => /^## \d+\./.test(p) || (file === 'README.md' && /^## (Why|Results)\b/.test(p)))
+      .map((p) => {
+        const first = p.split('\n')[0].replace(/^## /, '')
+        return { file, part: p, first, num: (first.match(/^(\d+)\./) ?? [])[1] ?? '', id: slug(first) }
+      }),
+  )
+  const firstId: Record<string, string> = {}
+  for (const r of raw) firstId[r.file] ??= r.id
+  // README's Why and Results lead, then numbered sections in order
+  raw.sort((a, b) => (a.num ? Number(a.num) : -1) - (b.num ? Number(b.num) : -1))
+  return raw.map(({ file, part, first, num, id }) => {
+    const body = rewriteLinks(part.split('\n').slice(1).join('\n').replace(/\n---\s*$/m, ''), file, firstId)
     const renderer = new marked.Renderer()
     renderer.heading = ({ tokens, depth, text: raw }) => {
       // anchor from the heading's plain text (markdown source minus formatting), never from rendered HTML
@@ -85,7 +132,7 @@ function buildSections(): Section[] {
       return `<h${depth} id="${hid}">${marked.Parser.parseInline(tokens)}</h${depth}>`
     }
     const html = highlight(marked.parse(body, { renderer, async: false }) as string)
-    return { num, title: first, id, html }
+    return { num, title: first, id, html, file }
   })
 }
 
@@ -160,12 +207,12 @@ export default function Docs() {
               <h1>Documentation</h1>
               <p className="sub">
                 Install it, wire your agent, choose a mode and profile, run the proxy, get originals back with
-                mto_expand. Rendered from the README, so it is always current.
+                mto_expand. Rendered from the guides in the repository, so it is always current.
               </p>
               <div className="doc__meta">
-                <a href={`${BLOB}/README.md`}>
+                <a href={`${REPO}/tree/main/docs`}>
                   <IconGithub />
-                  README.md
+                  docs/
                 </a>
                 <a href={`${BLOB}/TESTING.md`}>
                   <IconBook />
@@ -182,7 +229,7 @@ export default function Docs() {
                 <section key={s.id} aria-labelledby={s.id}>
                   <h2 id={s.id} dangerouslySetInnerHTML={{ __html: marked.parseInline(s.title) as string }} />
                   <div className="src">
-                    <a href={`${BLOB}/README.md#${s.id}`}>README {s.num ? `§${s.num}` : ''}</a>
+                    <a href={`${BLOB}/${s.file}#${s.id}`}>{s.file}</a>
                     {(SOURCES[s.num] ?? []).map((f) => (
                       <a key={f} href={`${BLOB}/${f}`}>
                         {f}
@@ -197,6 +244,7 @@ export default function Docs() {
         </div>
         <Footer />
       </div>
+      <ReviewPanel />
     </>
   )
 }
