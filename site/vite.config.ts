@@ -1,4 +1,5 @@
 import react from '@vitejs/plugin-react'
+import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig, type Plugin } from 'vite'
@@ -80,10 +81,59 @@ Works with any MCP-capable agent: VS Code Copilot, Claude Code, Cursor, Windsurf
   }
 }
 
+/**
+ * Build-only head hardening and speed-ups that GitHub Pages cannot do with response headers:
+ * - Content-Security-Policy as a <meta>, with the inline theme script allowed by its hash.
+ *   (frame-ancestors, X-Frame-Options, nosniff and Permissions-Policy only work as real headers.)
+ * - Referrer-Policy as a <meta>.
+ * - Preload of the two Latin font files the first screen uses.
+ */
+function headHardening(): Plugin {
+  let base = '/'
+  return {
+    name: 'mto-head',
+    apply: 'build',
+    configResolved(config) {
+      base = config.base
+    },
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        const hashes = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
+          (m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`,
+        )
+        const csp = [
+          "default-src 'self'",
+          `script-src 'self' ${hashes.join(' ')}`,
+          // React style props (reveal delays, widths) are inline style attributes
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: https:",
+          "font-src 'self' data:",
+          // live npm downloads and GitHub stars
+          'connect-src https://api.npmjs.org https://api.github.com',
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'none'",
+          'upgrade-insecure-requests',
+        ].join('; ')
+        const fonts = Object.keys(ctx.bundle ?? {})
+          .filter((f) => /(geist|jetbrains-mono)-latin-wght-normal-[\w-]+\.woff2$/.test(f))
+          .map((f) => `    <link rel="preload" href="${base}${f}" as="font" type="font/woff2" crossorigin />`)
+        const head = [
+          `    <meta http-equiv="Content-Security-Policy" content="${csp}" />`,
+          '    <meta name="referrer" content="strict-origin-when-cross-origin" />',
+          ...fonts,
+        ].join('\n')
+        return html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n${head}`)
+      },
+    },
+  }
+}
+
 // GitHub Pages serves project sites from /<repo>/. Override with BASE_PATH=/ for a custom domain.
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/mcp-token-optimizer/',
-  plugins: [react(), seo()],
+  plugins: [react(), seo(), headHardening()],
   define: {
     __BUILD_FACTS__: JSON.stringify(buildFacts()),
     __SITE_URL__: JSON.stringify(SITE_URL),
